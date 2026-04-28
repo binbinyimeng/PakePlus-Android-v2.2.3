@@ -14,6 +14,38 @@ const nightmareFactorTypes = {
     ZOMBIE_SPEED_PERCENT: "zombie_speed_percent"   // 僵尸速度百分比变化
 };
 
+// 噩梦因子稀有度权重配置
+const nightmareRarityWeights = {
+    // 基础权重
+    base: {
+        common: 60,
+        rare: 40,
+        epic: 20,
+        legendary: 10
+    },
+    // 关卡调整系数（随着关卡推进，高稀有度权重增加）
+    levelAdjustment: {
+        common: -3,    // 每关普通权重减少2点
+        rare: -2,     // 每关稀有权重增加0.5点
+        epic: 1,       // 每关史诗权重增加1点
+        legendary: 2 // 每关传说权重增加0.5点
+    },
+    // 最小权重（防止权重降为负数）
+    minWeights: {
+        common: 1,
+        rare: 1,
+        epic: 1,
+        legendary: 1
+    },
+    // 最大权重
+    maxWeights: {
+        common: 600,
+        rare: 450,
+        epic: 400,
+        legendary: 200
+    }
+};
+
 // 噩梦因子
 const nightmareFactors = [
     // ========== 普通 (Common) ==========
@@ -285,12 +317,106 @@ const nightmareGlobalData = {
     }
 };
 
-// 随机选择噩梦因子
-function getRandomNightmareFactors(count = 3) {
-    const shuffled = [...nightmareFactors].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+// 根据关卡计算当前的稀有度权重
+function calculateNightmareRarityWeights(currentLevel) {
+    // 肉鸽模式关卡是 101-120，转换为 1-20 的进度
+    const rogueLevel = Math.max(1, currentLevel - 100);
+    
+    const weights = {};
+    const rarities = ['common', 'rare', 'epic', 'legendary'];
+    
+    rarities.forEach(rarity => {
+        // 基础权重 + 关卡调整 × 关卡进度
+        let weight = nightmareRarityWeights.base[rarity] + 
+                     nightmareRarityWeights.levelAdjustment[rarity] * (rogueLevel - 1);
+        
+        // 限制在最小和最大权重之间
+        weight = Math.max(nightmareRarityWeights.minWeights[rarity], 
+                         Math.min(nightmareRarityWeights.maxWeights[rarity], weight));
+        
+        weights[rarity] = weight;
+    });
+    
+    return weights;
+}
+
+// 根据稀有度权重随机选择一个稀有度
+function selectRandomRarity(weights) {
+    const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const [rarity, weight] of Object.entries(weights)) {
+        random -= weight;
+        if (random <= 0) {
+            return rarity;
+        }
+    }
+    
+    return 'common'; // 默认返回普通
+}
+
+// 根据稀有度获取该稀有度的所有噩梦因子
+function getNightmareFactorsByRarity(rarity) {
+    return nightmareFactors.filter(factor => factor.rarity === rarity);
+}
+
+// 随机选择噩梦因子（带稀有度权重机制）
+function getRandomNightmareFactors(count = 3, currentLevel = 101) {
+    const weights = calculateNightmareRarityWeights(currentLevel);
+    const selectedFactors = [];
+    const usedIds = new Set();
+    
+    // 计算当前权重分布用于调试
+    const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+    const weightPercent = {};
+    for (const [rarity, weight] of Object.entries(weights)) {
+        weightPercent[rarity] = Math.round((weight / totalWeight) * 100);
+    }
+    console.log(`第${currentLevel - 100}关噩梦因子权重分布:`, weightPercent);
+    
+    // 尝试选择足够的因子
+    let attempts = 0;
+    while (selectedFactors.length < count && attempts < count * 10) {
+        attempts++;
+        
+        // 选择稀有度
+        const selectedRarity = selectRandomRarity(weights);
+        
+        // 获取该稀有度的可用因子
+        const availableFactors = getNightmareFactorsByRarity(selectedRarity)
+            .filter(f => !usedIds.has(f.id));
+        
+        if (availableFactors.length > 0) {
+            // 随机选择一个
+            const randomIndex = Math.floor(Math.random() * availableFactors.length);
+            const selectedFactor = availableFactors[randomIndex];
+            
+            selectedFactors.push(selectedFactor);
+            usedIds.add(selectedFactor.id);
+        } else {
+            // 如果该稀有度没有可用因子，尝试其他稀有度
+            const allAvailableFactors = nightmareFactors.filter(f => !usedIds.has(f.id));
+            if (allAvailableFactors.length > 0) {
+                const randomIndex = Math.floor(Math.random() * allAvailableFactors.length);
+                const selectedFactor = allAvailableFactors[randomIndex];
+                selectedFactors.push(selectedFactor);
+                usedIds.add(selectedFactor.id);
+            } else {
+                break; // 没有更多因子了
+            }
+        }
+    }
+    
+    // 记录选择的因子稀有度
+    const rarityCount = { common: 0, rare: 0, epic: 0, legendary: 0 };
+    selectedFactors.forEach(f => rarityCount[f.rarity]++);
+    console.log('选择的噩梦因子稀有度:', rarityCount);
+    
+    return selectedFactors;
 }
 
 window.nightmareFactors = nightmareFactors;
 window.nightmareGlobalData = nightmareGlobalData;
 window.getRandomNightmareFactors = getRandomNightmareFactors;
+window.nightmareRarityWeights = nightmareRarityWeights;
+window.calculateNightmareRarityWeights = calculateNightmareRarityWeights;
