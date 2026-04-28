@@ -25,17 +25,17 @@ const moneyUpgradeSystem = {
         4: {
             sunProductionSpeed: 3.0, 
             sunAmount: 20, // 阳光数量提高到20
-            cost: 50
+            cost: 100
         },
         5: {
             sunProductionSpeed: 3.0, 
             sunAmount: 50, // 阳光数量提高到50
-            cost: 100
+            cost: 200
         },
         6: {
             sunProductionSpeed: 3.0, // 生产速度保持不变
             sunAmount: 100, // 阳光数量提高到100
-            cost: 200 
+            cost: 500 
         }
     },
     
