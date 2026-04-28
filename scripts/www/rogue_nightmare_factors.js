@@ -57,7 +57,6 @@ const nightmareFactors = [
     { id: 6, name: "灾厄成疾", description: "下一关所有波次的僵尸生成间隔缩短250ms", cost: 45, effects: [{ type: nightmareFactorTypes.SPAWN_INTERVAL_ADD, value: -250, description: "生成间隔-250ms" }], icon: "⚡", rarity: "common" },
     { id: 7, name: "坚韧", description: "下一关所有僵尸的生命值增加50%", cost: 35, effects: [{ type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: 50, description: "僵尸生命值+50%" }], icon: "💪", rarity: "common" },
     { id: 8, name: "凶暴", description: "下一关所有僵尸的攻击力增加80%", cost: 40, effects: [{ type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: 80, description: "僵尸攻击力+80%" }], icon: "⚔️", rarity: "common" },
-    { id: 9, name: "疾风", description: "下一关所有僵尸的移动速度增加60%", cost: 35, effects: [{ type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: 60, description: "僵尸速度+60%" }], icon: "🏃", rarity: "common" },
     // 新增普通混合因子（负面偏强）
     { id: 33, name: "轻装上阵", description: "僵尸速度+80%，但生成间隔+25%", cost: 40, effects: [{ type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: 80, description: "僵尸速度+80%" }, { type: nightmareFactorTypes.SPAWN_INTERVAL_PERCENT, value: 25, description: "生成间隔+25%" }], icon: "🎒", rarity: "common" },
     { id: 34, name: "虚弱诅咒", description: "僵尸攻击力+70%，但生命值-15%", cost: 40, effects: [{ type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: 70, description: "僵尸攻击力+70%" }, { type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: -15, description: "僵尸生命值-15%" }], icon: "🔮", rarity: "common" },
@@ -105,7 +104,7 @@ const nightmareFactors = [
     // ========== 传说 (Legendary) ==========
     { id: 25, name: "不死诅咒", description: "僵尸生命值+250%，攻击力-40%", cost: 150, effects: [{ type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: 250, description: "僵尸生命值+250%" }, { type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: -40, description: "僵尸攻击力-40%" }], icon: "💀", rarity: "legendary" },
     { id: 26, name: "狂妄挑战", description: "僵尸攻击力+200%、速度+80%，但生命值-50%", cost: 160, effects: [{ type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: 200, description: "僵尸攻击力+200%" }, { type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: 80, description: "僵尸速度+80%" }, { type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: -50, description: "僵尸生命值-50%" }], icon: "🎭", rarity: "legendary" },
-    { id: 27, name: "暗影步", description: "僵尸速度+200%，生命值-50%", cost: 100, effects: [{ type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: 300, description: "僵尸速度+300%" }, { type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: -50, description: "僵尸生命值-50%" }], icon: "🌑", rarity: "legendary" },
+    { id: 27, name: "暗影步", description: "僵尸速度+100%，生命值-20%", cost: 80, effects: [{ type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: 300, description: "僵尸速度+300%" }, { type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: -30, description: "僵尸生命值-30%" }], icon: "🌑", rarity: "legendary" },
     { id: 28, name: "虚空之力", description: "僵尸攻击力+350%，速度-40%", cost: 220, effects: [{ type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: 350, description: "僵尸攻击力+350%" }, { type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: -40, description: "僵尸速度-40%" }], icon: "🌌", rarity: "legendary" },
     { id: 29, name: "不死军团", description: "僵尸生命值+800%、攻击力-60%、速度-60%", cost: 240, effects: [{ type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: 800, description: "僵尸生命值+800%" }, { type: nightmareFactorTypes.ZOMBIE_ATTACK_PERCENT, value: -60, description: "僵尸攻击力-60%" }, { type: nightmareFactorTypes.ZOMBIE_SPEED_PERCENT, value: -60, description: "僵尸速度-60%" }], icon: "👑", rarity: "legendary" },
     { id: 30, name: "血肉长城", description: "僵尸生命值+500%", cost: 200, effects: [{ type: nightmareFactorTypes.ZOMBIE_HEALTH_PERCENT, value: 500, description: "僵尸生命值+500%" }], icon: "🧟", rarity: "legendary" },
@@ -280,7 +279,7 @@ const nightmareGlobalData = {
         const totalSpeedPercent = this.zombieSpeedPercent + levelSpeedPercent;
         
         if (totalHealthPercent !== 0 || levelHealthPercent !== 0) {
-            let text = `生命: ${totalHealthPercent > 0 ? '+' : ''}${totalHealthPercent}%`;
+            let text = `生命: ${totalHealthPercent > 0 ? '' : ''}${totalHealthPercent}%`;
             if (levelHealthPercent !== 0 && this.zombieHealthPercent !== 0) {
                 text += ` (关卡${levelHealthPercent}%+噩梦${this.zombieHealthPercent > 0 ? '+' : ''}${this.zombieHealthPercent}%)`;
             } else if (levelHealthPercent !== 0) {
@@ -291,7 +290,7 @@ const nightmareGlobalData = {
             display.push(text);
         }
         if (totalAttackPercent !== 0 || levelAttackPercent !== 0) {
-            let text = `攻击: ${totalAttackPercent > 0 ? '+' : ''}${totalAttackPercent}%`;
+            let text = `攻击: ${totalAttackPercent > 0 ? '' : ''}${totalAttackPercent}%`;
             if (levelAttackPercent !== 0 && this.zombieAttackPercent !== 0) {
                 text += ` (关卡${levelAttackPercent}%+噩梦${this.zombieAttackPercent > 0 ? '+' : ''}${this.zombieAttackPercent}%)`;
             } else if (levelAttackPercent !== 0) {
@@ -302,7 +301,7 @@ const nightmareGlobalData = {
             display.push(text);
         }
         if (totalSpeedPercent !== 0 || levelSpeedPercent !== 0) {
-            let text = `速度: ${totalSpeedPercent > 0 ? '+' : ''}${totalSpeedPercent}%`;
+            let text = `速度: ${totalSpeedPercent > 0 ? '' : ''}${totalSpeedPercent}%`;
             if (levelSpeedPercent !== 0 && this.zombieSpeedPercent !== 0) {
                 text += ` (关卡${levelSpeedPercent}%+噩梦${this.zombieSpeedPercent > 0 ? '+' : ''}${this.zombieSpeedPercent}%)`;
             } else if (levelSpeedPercent !== 0) {
@@ -332,7 +331,7 @@ function calculateNightmareRarityWeights(currentLevel) {
         
         // 限制在最小和最大权重之间
         weight = Math.max(nightmareRarityWeights.minWeights[rarity], 
-                         Math.min(nightmareRarityWeights.maxWeights[rarity], weight));
+        Math.min(nightmareRarityWeights.maxWeights[rarity], weight));
         
         weights[rarity] = weight;
     });
