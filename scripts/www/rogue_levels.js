@@ -1,21 +1,125 @@
 // 肉鸽模式关卡配置 - 自动生成机制
-
 // ========== 僵尸生成间隔和波次间隔基础配置 ==========
 const intervalConfig = {
     // 普通波次的基础值
     normal: {
-        baseSpawnInterval: 2500,      // 基础僵尸生成间隔（毫秒）
-        baseWaveInterval: 8000        // 基础波次间隔（毫秒）
+        baseSpawnInterval: 3000,      // 基础僵尸生成间隔（毫秒）
+        baseWaveInterval: 10000        // 基础波次间隔（毫秒）
     },
     // 快速波次的基础值
     fast: {
-        baseSpawnInterval: 800,        // 基础僵尸生成间隔（毫秒）
+        baseSpawnInterval: 1000,        // 基础僵尸生成间隔（毫秒）
         baseWaveInterval: 12000          // 基础波次间隔（毫秒）
     },
-    minInterval: 100,                  // 最小间隔（毫秒）
-    levelFactor: 30,                  // 关卡数影响因子（每关减少多少毫秒）
+    minInterval: 60,                  // 最小间隔（毫秒）
+    levelFactor: 20,                  // 关卡数影响因子（每关减少多少毫秒）
     timeFactor: 2                     // 时间影响因子（每秒减少多少毫秒）
 };
+// ========== 动态难度调节系统 ==========
+window.difficultyAdjustmentSystem = {
+    // 当前累积的难度调节点数（本关卡内触发加速时增加）
+    currentDifficultyPoints: 0,
+    // 下一关将要应用的难度调节点数（上一关累积的）
+    nextLevelDifficultyPoints: 0,
+    // 每点难度对波次间隔的减少（毫秒）
+    waveIntervalReductionPerPoint: 5,
+    // 每点难度对威胁值的增加
+    threatValueAdditionPerPoint: 10,
+    
+    // 增加难度点数（玩家触发加速生成僵尸时调用）
+    addDifficultyPoints: function(points = 1) {
+        this.currentDifficultyPoints += points;
+        console.log(
+            `🔴 难度调节: 触发加速生成！当前关卡难度点数 +${points}, ` +
+            `总计: ${this.currentDifficultyPoints}, ` +
+            `(下一关将减少 ${this.currentDifficultyPoints * this.waveIntervalReductionPerPoint}ms 间隔, ` +
+            `增加 ${this.currentDifficultyPoints * this.threatValueAdditionPerPoint} 威胁值)`
+        );
+    },
+    
+    // 获取当前关卡应用的难度调节（下一关使用）
+    getDifficultyAdjustment: function() {
+        return {
+            waveIntervalReduction: this.nextLevelDifficultyPoints * this.waveIntervalReductionPerPoint,
+            threatValueAddition: this.nextLevelDifficultyPoints * this.threatValueAdditionPerPoint,
+            difficultyPoints: this.nextLevelDifficultyPoints
+        };
+    },
+    
+    // 关卡结束时：将当前难度点数移到下一关，清除当前点数
+    onLevelComplete: function() {
+        this.nextLevelDifficultyPoints = this.currentDifficultyPoints;
+        this.currentDifficultyPoints = 0;
+        console.log(
+            `🔵 关卡完成: 本关卡累积难度点数 ${this.nextLevelDifficultyPoints}, ` +
+            `已保存到下一关应用！`
+        );
+    },
+    
+    // 游戏失败/重新开始时：清除所有难度点数
+    resetDifficulty: function() {
+        const oldCurrent = this.currentDifficultyPoints;
+        const oldNext = this.nextLevelDifficultyPoints;
+        this.currentDifficultyPoints = 0;
+        this.nextLevelDifficultyPoints = 0;
+        console.log(
+            `🟢 难度重置: 游戏失败/重新开始！清除难度点数 ` +
+            `(当前: ${oldCurrent}, 下一关: ${oldNext})`
+        );
+    },
+    
+    // 进入新关卡时：重置当前点数，保留下一关点数作为当前应用
+    onEnterLevel: function() {
+        console.log(
+            `🟡 进入关卡: 应用难度点数 ${this.nextLevelDifficultyPoints}, ` +
+            `波次间隔 -${this.nextLevelDifficultyPoints * this.waveIntervalReductionPerPoint}ms, ` +
+            `威胁值 +${this.nextLevelDifficultyPoints * this.threatValueAdditionPerPoint}`
+        );
+    },
+    
+    // 应用难度调节到波次配置
+    applyToWave: function(waveConfig) {
+        const adjustment = this.getDifficultyAdjustment();
+        if (adjustment.difficultyPoints === 0) return waveConfig;
+        
+        // 修改威胁值
+        const originalThreat = waveConfig.threatValue;
+        waveConfig.threatValue = Math.max(1, originalThreat + adjustment.threatValueAddition);
+        
+        console.log(
+            `🎯 难度调节应用: 原威胁值 ${originalThreat.toFixed(2)}, ` +
+            `调整后 ${waveConfig.threatValue.toFixed(2)}, ` +
+            `难度点数: ${adjustment.difficultyPoints}`
+        );
+        
+        return waveConfig;
+    },
+    
+    // 应用难度调节到间隔计算
+    applyToIntervals: function(spawnInterval, waveInterval) {
+        const adjustment = this.getDifficultyAdjustment();
+        if (adjustment.difficultyPoints === 0) {
+            return { spawnInterval, waveInterval };
+        }
+        
+        const adjustedSpawnInterval = Math.max(50, spawnInterval - adjustment.waveIntervalReduction);
+        const adjustedWaveInterval = Math.max(50, waveInterval - adjustment.waveIntervalReduction);
+        
+        console.log(
+            `⏱️ 难度调节应用: 原生成间隔 ${spawnInterval}ms → ${adjustedSpawnInterval}ms, ` +
+            `原波次间隔 ${waveInterval}ms → ${adjustedWaveInterval}ms, ` +
+            `减少 ${adjustment.waveIntervalReduction}ms, ` +
+            `难度点数: ${adjustment.difficultyPoints}`
+        );
+        
+        return {
+            spawnInterval: adjustedSpawnInterval,
+            waveInterval: adjustedWaveInterval
+        };
+    }
+};
+
+
 
 // ========== 计算僵尸生成间隔和波次间隔的新机制 ==========
 /**
@@ -65,15 +169,23 @@ function calculateDynamicIntervals(isFastWave, levelNumber, levelTime) {
         console.log(`波次间隔已被限制到最小值: ${waveInterval}ms`);
     }
     
-    const result = {
+    const baseResult = {
         spawnInterval: Math.floor(spawnInterval),
         waveInterval: Math.floor(waveInterval)
     };
     
-    console.log(`最终结果: 生成间隔=${result.spawnInterval}ms, 波次间隔=${result.waveInterval}ms`);
-    console.log('================================');
+    // 应用难度调节
+    let finalResult = baseResult;
+    if (window.difficultyAdjustmentSystem) {
+        finalResult = window.difficultyAdjustmentSystem.applyToIntervals(
+            baseResult.spawnInterval,
+            baseResult.waveInterval
+        );
+    }
     
-    return result;
+    console.log(`最终结果: 生成间隔=${finalResult.spawnInterval}ms, 波次间隔=${finalResult.waveInterval}ms`);
+    
+    return finalResult;
 }
 
 const zombieThreatValues = {
@@ -89,8 +201,31 @@ const zombieThreatValues = {
     "strongArcher": 50,
     "assassin": 4,
     "thug": 20,
-    "dog": 2
+    "dog": 2,
+    "police": 60
 };
+
+// ========== 僵尸威胁值范围配置 ==========
+// 决定了只有当前波次的最终威胁值在该范围内才能刷新该僵尸
+// min: 最小威胁值（包含），max: 最大威胁值（包含），不设置表示无限制
+const zombieThreatRange = {
+    "normal": { min: 0, max: 500 },         
+    "normalEnhanced": { min: 0, max: 500 },  
+    "big": { min: 200, max: 1000 },            
+    "bigEnhanced": { min: 200, max: null },    
+    "shieldZombie": { min: 0, max: null },    
+    "shieldZombieEnhanced": { min: 0, max: null },
+    "archer": { min: 500, max: 200000 },       
+    "bigSpider": { min: 200, max: null },       
+    "strongZombie": { min: 1000, max: null },  
+    "strongArcher": { min: 1000, max: null },  
+    "assassin": { min: 1000, max: null },       
+    "thug": { min: 300, max: null },            
+    "dog": { min: 1000, max: null },             
+    "police": { min: 2000, max: null }        
+};
+
+
 
 // 僵尸权重配置（值越大，出现概率越高）
 const zombieWeights = {
@@ -106,84 +241,71 @@ const zombieWeights = {
     "strongArcher": 8, // 强壮弓箭僵尸（非常稀有）
     "assassin": 5, // 刺客僵尸
     "thug": 8, // 暴徒僵尸
-    "dog": 1 // 狗僵尸
+    "dog": 1, // 狗僵尸
+    "police": 6 // 警察僵尸
 };
 
 const zombiePool = [
     "normal", "normalEnhanced", "big", "bigEnhanced", "shieldZombie", "shieldZombieEnhanced", "assassin",
-    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog"
+    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog", "police"
 ];
 
 const rogueLevels = [
-    // ===== 第1关 =====
+    // 第1关
     {
         id: 101,
         name: "肉鸽模式 - 第1关",
         description: "初始挑战，适应肉鸽节奏",
-        waves: [
-            {
-                waveNumber: 0.2,
-                isFirst: true,
-                isLast: true,
-                threatValue: 3,
-                isFastWave: true,
-                excludedZombieTypes: ["archer", "strongArcher", "strongZombie", "bigSpider", "big", "bigEnhanced", "assassin"]
-            }
-        ]
+        waves: [{ waveNumber: 1, isFirst: true, isLast: true, threatValue: 2, isFastWave: true, excludedZombieTypes: ["archer", "strongArcher", "strongZombie", "bigSpider", "big", "bigEnhanced", "assassin"] }]
     },
-
-    // ===== 第2关 =====
+    // 第2关
     {
         id: 102,
         name: "肉鸽模式 - 第2关",
         description: "基础挑战，无特殊加成",
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 2, isFastWave: false, excludedZombieTypes: ["archer", "strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 6, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 9, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 7, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 40, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
         ]
     },
-
-    // ===== 第3关 =====
+    // 第3关
     {
         id: 103,
         name: "肉鸽模式 - 第3关 · 轻风",
         description: "⚡ 僵尸速度提升20%",
         zombieSpeedPercent: 20,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 2, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 4, isFastWave: true, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 20, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 5, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 13, isFastWave: true, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 70, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
         ]
     },
-
-    // ===== 第4关 =====
+    // 第4关
     {
         id: 104,
         name: "肉鸽模式 - 第4关 · 坚韧",
         description: "🛡️ 僵尸生命值提升30%",
         zombieHealthPercent: 30,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 2, isFastWave: false, excludedZombieTypes: ["strongArcher", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 8, isFastWave: true, excludedZombieTypes: ["assassin"] },
-            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 54, isFastWave: true, excludedZombieTypes: ["assassin"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["strongArcher", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 267, isFastWave: true, excludedZombieTypes: ["assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 1100, isFastWave: true, excludedZombieTypes: ["assassin"] }
         ]
     },
-
-    // ===== 第5关 =====
+    // 第5关
     {
         id: 105,
         name: "肉鸽模式 - 第5关 · 锋芒",
         description: "⚔️ 僵尸攻击力提升50%",
         zombieAttackPercent: 50,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 2, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 9, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 100.8, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 67, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 1300, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] }
         ]
     },
-
-    // ===== 第6关 =====
+    // 第6关
     {
         id: 106,
         name: "肉鸽模式 - 第6关 · 疾风",
@@ -191,14 +313,13 @@ const rogueLevels = [
         zombieSpeedPercent: 50,
         zombieHealthPercent: 40,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 4, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 8, isFastWave: true, excludedZombieTypes: ["normal"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 96, isFastWave: false, excludedZombieTypes: ["normal"] },
-            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 122.4, isFastWave: true, excludedZombieTypes: ["normal"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 200, isFastWave: true, excludedZombieTypes: ["normal"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 333, isFastWave: false, excludedZombieTypes: ["normal"] },
+            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 2700, isFastWave: true, excludedZombieTypes: ["normal"] }
         ]
     },
-
-    // ===== 第7关 =====
+    // 第7关
     {
         id: 107,
         name: "肉鸽模式 - 第7关 · 凶猛",
@@ -206,14 +327,13 @@ const rogueLevels = [
         zombieAttackPercent: 80,
         zombieSpeedPercent: 40,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 64, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 102.8, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 109.2, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 154.8, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 130, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1200, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 3500, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
         ]
     },
-
-    // ===== 第8关 =====
+    // 第8关
     {
         id: 108,
         name: "肉鸽模式 - 第8关 · 壁垒",
@@ -221,15 +341,14 @@ const rogueLevels = [
         zombieHealthPercent: 100,
         zombieAttackPercent: 40,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 102.8, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 115.6, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 128.4, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 147.6, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 284.4, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 170, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 733, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1200, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 1733, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 4700, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
         ]
     },
-
-    // ===== 第9关 =====
+    // 第9关
     {
         id: 109,
         name: "肉鸽模式 - 第9关 · 狂暴",
@@ -237,15 +356,14 @@ const rogueLevels = [
         zombieAttackPercent: 100,
         zombieSpeedPercent: 50,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 115.6, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 141.2, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 166.8, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 205.2, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 478.8, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 200, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 867, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1400, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 5300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
         ]
     },
-
-    // ===== 第10关 =====
+    // 第10关
     {
         id: 110,
         name: "肉鸽模式 - 第10关 · 均衡试炼",
@@ -254,64 +372,60 @@ const rogueLevels = [
         zombieAttackPercent: 100,
         zombieSpeedPercent: 100,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 141.2, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 192.4, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 243.6, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 320.4, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 435.6, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 656.4, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 230, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1600, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 7300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
         ]
     },
-
-    // ===== 第11关 =====
+    // 第11关
     {
         id: 111,
         name: "肉鸽模式 - 第11关 · 钢铁之躯",
         description: "🛡️🛡️ 生命+100%，其他无加成",
         zombieHealthPercent: 100,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 192.4, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 294.8, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 397.2, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 550.8, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 505.08, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 573.28, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 270, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1133, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1800, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2533, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3333, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 8300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第12关 =====
+    // 第12关
     {
         id: 112,
         name: "肉鸽模式 - 第12关 · 闪电战",
         description: "⚡⚡ 速度+250%，其他无加成",
         zombieSpeedPercent: 250,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 294.8, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 499.6, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 510.44, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 521.16, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 629.84, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 300, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2800, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 7300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第13关 =====
+    // 第13关
     {
         id: 113,
         name: "肉鸽模式 - 第13关 · 致命一击",
         description: "⚔️⚔️ 攻击+500%，其他无加成",
         zombieAttackPercent: 500,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 499.6, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 540.92, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 504.09, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 504.88, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 505.86, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 507.04, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 513.47, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 330, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1333, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2867, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3733, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 4667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 11300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第14关 =====
+    // 第14关
     {
         id: 114,
         name: "肉鸽模式 - 第14关 · 不破之盾",
@@ -319,17 +433,16 @@ const rogueLevels = [
         zombieHealthPercent: 300,
         zombieSpeedPercent: 100,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 540.92, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 504.09, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 504.88, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 505.86, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 507.04, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 508.62, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 517.02, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 370, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1467, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2267, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3133, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 5067, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 12300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第15关 =====
+    // 第15关
     {
         id: 115,
         name: "肉鸽模式 - 第15关 · 均衡地狱",
@@ -338,17 +451,16 @@ const rogueLevels = [
         zombieAttackPercent: 300,
         zombieSpeedPercent: 300,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 504.09, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 505.49, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 506.69, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 508.29, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 510.49, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 513.39, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 529.49, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 400, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1600, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2467, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3400, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4400, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 5467, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 13300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第16关 =====
+    // 第16关
     {
         id: 116,
         name: "肉鸽模式 - 第16关 · 死神之镰",
@@ -356,16 +468,15 @@ const rogueLevels = [
         zombieAttackPercent: 400,
         zombieSpeedPercent: 120,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 505.49, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 508.05, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 510.14, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 533.48, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 543.02, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 555.34, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 430, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1733, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2667, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4733, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 11700, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第17关 =====
+    // 第17关
     {
         id: 117,
         name: "肉鸽模式 - 第17关 · 不朽堡垒",
@@ -373,43 +484,40 @@ const rogueLevels = [
         zombieHealthPercent: 500,
         zombieAttackPercent: 200,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 508.05, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 513.67, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 518.82, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 525.44, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 533.94, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 627.40, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 470, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1867, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2867, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3933, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 5067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 12700, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第18关 =====
+    // 第18关
     {
         id: 118,
         name: "肉鸽模式 - 第18关 · 纯粹速度",
         description: "⚡⚡⚡ 速度+500%，无其他加成",
         zombieSpeedPercent: 500,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 513.67, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 527.44, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 791.97, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 500, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 3667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 16000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第19关 =====
+    // 第19关
     {
         id: 119,
         name: "肉鸽模式 - 第19关 · 终极狂暴",
         description: "⚔️⚔️⚔️ 攻击+1000%，其他无加成",
         zombieAttackPercent: 1000,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 527.44, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 559.79, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 593.77, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 1127.79, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 530, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 3333, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 6000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 18000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
-
-    // ===== 第20关（最终关） =====
+    // 第20关（最终关）
     {
         id: 120,
         name: "肉鸽模式 - 终焉 · 诸神黄昏",
@@ -418,14 +526,14 @@ const rogueLevels = [
         zombieAttackPercent: 1000,
         zombieSpeedPercent: 500,
         waves: [
-            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 559.79, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 624.53, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 698.95, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 789.46, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 900.69, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 1010.73, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: false, threatValue: 1123.29, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 8, isFirst: false, isLast: true, threatValue: 1536.10, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 1, isFirst: true, isLast: false, threatValue: 570, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 2267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 3, isFirst: false, isLast: false, threatValue: 3467, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 4, isFirst: false, isLast: false, threatValue: 4733, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 5, isFirst: false, isLast: false, threatValue: 6067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 6, isFirst: false, isLast: false, threatValue: 7467, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 7, isFirst: false, isLast: false, threatValue: 8933, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 8, isFirst: false, isLast: true, threatValue: 21300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     }
 ];
@@ -439,27 +547,38 @@ const rogueLevels = [
  */
 function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
     const zombies = [];
-    let targetFinalThreat = wave.threatValue;
+    
+    console.log('========== 难度调节应用 - 波次生成 ==========');
+    console.log(`波次 ${wave.waveNumber}, 原始威胁值: ${wave.threatValue.toFixed(2)}`);
+    
+    // 创建波次副本以避免修改原始配置
+    const adjustedWave = Object.assign({}, wave);
+    adjustedWave.threatValue = wave.threatValue;
+    
+    // 应用难度调节到威胁值
+    if (window.difficultyAdjustmentSystem) {
+        window.difficultyAdjustmentSystem.applyToWave(adjustedWave);
+    }
+    
+    let targetFinalThreat = adjustedWave.threatValue;
 
-    // 确定生成间隔（保留预定义间隔逻辑）
+    // 确定生成间隔：每次都重新计算，不使用wave对象中保存的值
+    // 这样可以避免间隔累积递减
     let spawnInterval, waveInterval;
-    if (wave.spawnInterval !== undefined && wave.waveInterval !== undefined) {
-        spawnInterval = wave.spawnInterval;
-        waveInterval = wave.waveInterval;
-    } else {
-        // 使用新的动态间隔计算机制
-        const dynamicIntervals = calculateDynamicIntervals(wave.isFastWave, levelNumber, levelTime);
-        spawnInterval = dynamicIntervals.spawnInterval;
-        waveInterval = dynamicIntervals.waveInterval;
+    // 强制使用动态间隔计算机制，确保每次都基于基础值重新计算
+    const dynamicIntervals = calculateDynamicIntervals(wave.isFastWave, levelNumber, levelTime);
+    spawnInterval = dynamicIntervals.spawnInterval;
+    waveInterval = dynamicIntervals.waveInterval;
 
-        // 应用噩梦因子（如果存在）
-        if (typeof nightmareGlobalData !== 'undefined') {
-            targetFinalThreat = nightmareGlobalData.calculateThreatValue(targetFinalThreat);
-            spawnInterval = nightmareGlobalData.calculateSpawnInterval(spawnInterval);
-            waveInterval = nightmareGlobalData.calculateWaveInterval(waveInterval);
-        }
+    // 应用噩梦因子（如果存在）
+    if (typeof nightmareGlobalData !== 'undefined') {
+        targetFinalThreat = nightmareGlobalData.calculateThreatValue(targetFinalThreat);
+        spawnInterval = nightmareGlobalData.calculateSpawnInterval(spawnInterval);
+        waveInterval = nightmareGlobalData.calculateWaveInterval(waveInterval);
     }
 
+    // 将计算后的间隔值赋给wave对象供后续使用
+    // 但每次函数开始时会重新计算，不会累积递减
     wave.spawnInterval = spawnInterval;
     wave.waveInterval = waveInterval;
 
@@ -468,18 +587,54 @@ function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
     const maxThreatSum = targetZombieThreatSum * 1.1;
     const minThreatSum = targetZombieThreatSum * 0.9;
 
-    // 构建可用僵尸池（过滤排除类型 + 威胁值过高的类型）
+    // 构建可用僵尸池（过滤排除类型 + 威胁值过高的类型 + 威胁值范围限制）
     let availableZombies = [...zombiePool];
     if (wave.excludedZombieTypes && Array.isArray(wave.excludedZombieTypes)) {
         availableZombies = availableZombies.filter(type => !wave.excludedZombieTypes.includes(type));
     }
 
+    console.log('========== 僵尸威胁值检查 ==========');
+    console.log(`当前波次最终威胁值: ${targetFinalThreat.toFixed(2)}`);
+
     const filteredZombies = availableZombies.filter(type => {
         const threat = zombieThreatValues[type];
-        return threat <= targetZombieThreatSum * 2;
+        const ok = threat <= targetZombieThreatSum * 2;
+        if (!ok) {
+            console.log(`  [${type}] 僵尸威胁值 ${threat} 过高（超过目标的2倍），排除`);
+        }
+        return ok;
     });
 
-    let finalZombiePool = filteredZombies.length > 0 ? filteredZombies : availableZombies;
+    // 新增：威胁值范围检查
+    console.log('========== 僵尸威胁值范围检查 ==========');
+    const rangeFilteredZombies = filteredZombies.filter(type => {
+        const range = zombieThreatRange[type];
+        if (!range) {
+            return true; // 没有范围配置则不限制
+        }
+        
+        let inRange = true;
+        let reason = '';
+        
+        // 检查最小值
+        if (range.min !== undefined && range.min !== null && targetFinalThreat < range.min) {
+            inRange = false;
+            reason = `当前威胁值 ${targetFinalThreat.toFixed(2)} < 最小值 ${range.min}`;
+        }
+        // 检查最大值
+        if (range.max !== undefined && range.max !== null && targetFinalThreat > range.max) {
+            inRange = false;
+            reason = `当前威胁值 ${targetFinalThreat.toFixed(2)} > 最大值 ${range.max}`;
+        }
+        
+        if (!inRange) {
+            console.log(`  [${type}] 威胁值范围不符合要求（${reason}），排除`);
+        }
+        
+        return inRange;
+    });
+
+    let finalZombiePool = rangeFilteredZombies.length > 0 ? rangeFilteredZombies : filteredZombies;
     // 极端情况：如果仍然为空，则使用威胁值最小的僵尸
     if (finalZombiePool.length === 0) {
         finalZombiePool = [availableZombies.reduce((a, b) => 
@@ -487,7 +642,12 @@ function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
         )];
     }
 
-    // ---------- 核心修改：权重随机刷新僵尸 ----------
+    // ---------- 核心修改：权重随机刷新僵尸，限制最多4种 ----------
+    const MAX_ZOMBIE_TYPES = 4;  // 每波最多使用4种僵尸
+    
+    console.log('========== 僵尸种类限制检查 ==========');
+    console.log(`每波最多使用 ${MAX_ZOMBIE_TYPES} 种僵尸`);
+    
     const zombieCounts = {};
     let currentThreatSum = 0;
     const maxAttempts = 2000;
@@ -527,7 +687,17 @@ function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
     // 第一阶段：随机添加僵尸，直到威胁值总和进入 [minThreatSum, maxThreatSum] 区间
     while (currentThreatSum < minThreatSum && attempts < maxAttempts) {
         attempts++;
-        const zombieType = weightedRandomZombie(finalZombiePool);
+        
+        // 确定当前可用的僵尸池
+        let currentPool = finalZombiePool;
+        const usedTypes = Object.keys(zombieCounts);
+        
+        // 如果已经使用了4种僵尸，则只能从这4种中选择
+        if (usedTypes.length >= MAX_ZOMBIE_TYPES) {
+            currentPool = usedTypes;
+        }
+        
+        const zombieType = weightedRandomZombie(currentPool);
         const threat = zombieThreatValues[zombieType];
 
         // 如果添加该僵尸会超过最大允许威胁值，则尝试其他类型（避免溢出）
@@ -535,15 +705,34 @@ function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
             continue;
         }
 
+        // 记录新添加的僵尸种类
+        const isNewType = !zombieCounts[zombieType];
+        if (isNewType) {
+            const currentUsedTypes = Object.keys(zombieCounts).length + 1;
+            console.log(`  添加新僵尸种类 [${zombieType}]，当前已使用 ${currentUsedTypes}/${MAX_ZOMBIE_TYPES} 种`);
+        }
+        
         zombieCounts[zombieType] = (zombieCounts[zombieType] || 0) + 1;
         currentThreatSum += threat;
     }
 
     // 第二阶段：若因尝试次数限制或无法添加导致未达到下限，则强制用威胁值最小的僵尸补足
     if (currentThreatSum < minThreatSum) {
-        const minThreatType = finalZombiePool.reduce((a, b) => 
-            zombieThreatValues[a] < zombieThreatValues[b] ? a : b
-        );
+        const usedTypes = Object.keys(zombieCounts);
+        let minThreatType;
+        
+        // 如果已经使用了僵尸，则从已使用的类型中选择威胁值最小的
+        if (usedTypes.length > 0) {
+            minThreatType = usedTypes.reduce((a, b) => 
+                zombieThreatValues[a] < zombieThreatValues[b] ? a : b
+            );
+        } else {
+            // 如果还没有使用任何僵尸，则从最终池中选择威胁值最小的
+            minThreatType = finalZombiePool.reduce((a, b) => 
+                zombieThreatValues[a] < zombieThreatValues[b] ? a : b
+            );
+        }
+        
         const minThreat = zombieThreatValues[minThreatType];
 
         while (currentThreatSum < minThreatSum && currentThreatSum + minThreat <= maxThreatSum) {
@@ -561,6 +750,9 @@ function generateZombiesFromThreat(wave, levelNumber = 101, levelTime = 0) {
 
     // 计算实际最终威胁值并输出日志
     const actualFinalThreat = (currentThreatSum * 1000) / spawnInterval;
+    // 设置波次的威胁值属性，供日志显示
+    wave.calculatedThreat = wave.threatValue;
+    wave.finalThreat = actualFinalThreat;
     console.log(
         `波次 ${wave.waveNumber}: 目标最终威胁值=${targetFinalThreat.toFixed(2)}, ` +
         `实际最终威胁值=${actualFinalThreat.toFixed(2)}, ` +
