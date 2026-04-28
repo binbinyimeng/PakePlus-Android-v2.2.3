@@ -3,17 +3,17 @@
 const intervalConfig = {
     // 普通波次的基础值
     normal: {
-        baseSpawnInterval: 3000,      // 基础僵尸生成间隔（毫秒）
+        baseSpawnInterval: 4000,      // 基础僵尸生成间隔（毫秒）
         baseWaveInterval: 10000        // 基础波次间隔（毫秒）
     },
     // 快速波次的基础值
     fast: {
-        baseSpawnInterval: 1000,        // 基础僵尸生成间隔（毫秒）
+        baseSpawnInterval: 1400,        // 基础僵尸生成间隔（毫秒）
         baseWaveInterval: 12000          // 基础波次间隔（毫秒）
     },
     minInterval: 60,                  // 最小间隔（毫秒）
-    levelFactor: 20,                  // 关卡数影响因子（每关减少多少毫秒）
-    timeFactor: 2                     // 时间影响因子（每秒减少多少毫秒）
+    levelFactor: 30,                  // 关卡数影响因子（每关减少多少毫秒）
+    timeFactor: 3                     // 时间影响因子（每秒减少多少毫秒）
 };
 // ========== 动态难度调节系统 ==========
 window.difficultyAdjustmentSystem = {
@@ -202,7 +202,8 @@ const zombieThreatValues = {
     "assassin": 4,
     "thug": 20,
     "dog": 2,
-    "police": 60
+    "police": 60,
+    "lizard": 300
 };
 
 // ========== 僵尸威胁值范围配置 ==========
@@ -222,7 +223,8 @@ const zombieThreatRange = {
     "assassin": { min: 1000, max: null },       
     "thug": { min: 300, max: null },            
     "dog": { min: 1000, max: null },             
-    "police": { min: 2000, max: null }        
+    "police": { min: 2000, max: null },        
+    "lizard": { min: 5000, max: null }        
 };
 
 
@@ -242,12 +244,13 @@ const zombieWeights = {
     "assassin": 5, // 刺客僵尸
     "thug": 8, // 暴徒僵尸
     "dog": 1, // 狗僵尸
-    "police": 6 // 警察僵尸
+    "police": 6, // 警察僵尸
+    "lizard": 1// 妙龙僵尸
 };
 
 const zombiePool = [
     "normal", "normalEnhanced", "big", "bigEnhanced", "shieldZombie", "shieldZombieEnhanced", "assassin",
-    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog", "police"
+    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog", "police", "lizard"
 ];
 
 const rogueLevels = [
@@ -266,7 +269,7 @@ const rogueLevels = [
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 2, isFastWave: false, excludedZombieTypes: ["archer", "strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 7, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 40, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 30, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
         ]
     },
     // 第3关
@@ -278,7 +281,7 @@ const rogueLevels = [
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 5, isFastWave: false, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 13, isFastWave: true, excludedZombieTypes: ["strongArcher", "big", "bigEnhanced", "bigSpider", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 70, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 60, isFastWave: true, excludedZombieTypes: ["big", "bigEnhanced", "bigSpider", "assassin"] }
         ]
     },
     // 第4关
@@ -289,8 +292,8 @@ const rogueLevels = [
         zombieHealthPercent: 30,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["strongArcher", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 267, isFastWave: true, excludedZombieTypes: ["assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 1100, isFastWave: true, excludedZombieTypes: ["assassin"] }
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 107, isFastWave: true, excludedZombieTypes: ["assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 500, isFastWave: true, excludedZombieTypes: ["assassin"] }
         ]
     },
     // 第5关
@@ -301,8 +304,8 @@ const rogueLevels = [
         zombieAttackPercent: 50,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
-            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 67, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 1300, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] }
+            { waveNumber: 2, isFirst: false, isLast: false, threatValue: 150, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] },
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 1000, isFastWave: true, excludedZombieTypes: ["normal", "assassin"] }
         ]
     },
     // 第6关
@@ -316,7 +319,7 @@ const rogueLevels = [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 30, isFastWave: false, excludedZombieTypes: ["normal", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 200, isFastWave: true, excludedZombieTypes: ["normal"] },
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 333, isFastWave: false, excludedZombieTypes: ["normal"] },
-            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 2700, isFastWave: true, excludedZombieTypes: ["normal"] }
+            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 2000, isFastWave: true, excludedZombieTypes: ["normal"] }
         ]
     },
     // 第7关
@@ -377,7 +380,7 @@ const rogueLevels = [
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1600, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 7300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 10000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced"] }
         ]
     },
     // 第11关
@@ -392,21 +395,21 @@ const rogueLevels = [
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 1800, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2533, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3333, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 8300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 12000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第12关
     {
         id: 112,
         name: "肉鸽模式 - 第12关 · 闪电战",
-        description: "⚡⚡ 速度+250%，其他无加成",
-        zombieSpeedPercent: 250,
+        description: "⚡⚡ 速度+200%，其他无加成",
+        zombieSpeedPercent: 200,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 300, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2800, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 7300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 5, isFirst: false, isLast: true, threatValue: 15000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第13关
@@ -422,7 +425,7 @@ const rogueLevels = [
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 2867, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 3733, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 6, isFirst: false, isLast: false, threatValue: 4667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 11300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 20000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第14关
@@ -439,17 +442,17 @@ const rogueLevels = [
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3133, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 6, isFirst: false, isLast: false, threatValue: 5067, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 12300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 25000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第15关
     {
         id: 115,
-        name: "肉鸽模式 - 第15关 · 均衡地狱",
+        name: "肉鸽模式 - 第15关 · 地狱",
         description: "⚔️🛡️⚡ 全属性+300%",
         zombieHealthPercent: 300,
         zombieAttackPercent: 300,
-        zombieSpeedPercent: 300,
+        zombieSpeedPercent: 100,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 400, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 1600, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
@@ -457,13 +460,13 @@ const rogueLevels = [
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3400, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4400, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 6, isFirst: false, isLast: false, threatValue: 5467, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 13300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 7, isFirst: false, isLast: true, threatValue: 25000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第16关
     {
         id: 116,
-        name: "肉鸽模式 - 第16关 · 死神之镰",
+        name: "肉鸽模式 - 第16关 · 死镰",
         description: "⚔️⚡ 攻击+400%，速度+120%",
         zombieAttackPercent: 400,
         zombieSpeedPercent: 120,
@@ -473,7 +476,7 @@ const rogueLevels = [
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2667, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 4733, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 11700, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 25000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第17关
@@ -489,42 +492,45 @@ const rogueLevels = [
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 2867, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 3933, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 5067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 12700, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 6, isFirst: false, isLast: true, threatValue: 25000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第18关
     {
         id: 118,
-        name: "肉鸽模式 - 第18关 · 纯粹速度",
-        description: "⚡⚡⚡ 速度+500%，无其他加成",
-        zombieSpeedPercent: 500,
+        name: "肉鸽模式 - 第18关 · 试炼",
+        description: "⚡⚡⚡ 速度+100%，生命+500%，攻击+200%，无其他加成",
+        zombieSpeedPercent: 100,
+        zombieHealthPercent: 500,
+        zombieAttackPercent: 200,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 500, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 3667, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 16000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 3, isFirst: false, isLast: true, threatValue: 25000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第19关
     {
         id: 119,
-        name: "肉鸽模式 - 第19关 · 终极狂暴",
-        description: "⚔️⚔️⚔️ 攻击+1000%，其他无加成",
+        name: "肉鸽模式 - 第19关 · 另一个世界",
+        description: "⚔️⚔️⚔️ 生命+500% 攻击+1000%，其他无加成",
+        zombieHealthPercent: 500,
         zombieAttackPercent: 1000,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 530, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 3333, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 3, isFirst: false, isLast: false, threatValue: 6000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 18000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 4, isFirst: false, isLast: true, threatValue: 30000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     },
     // 第20关（最终关）
     {
         id: 120,
-        name: "肉鸽模式 - 终焉 · 诸神黄昏",
-        description: "⚔️🛡️⚡ 全属性+1000%，生存还是毁灭",
-        zombieHealthPercent: 1000,
-        zombieAttackPercent: 1000,
-        zombieSpeedPercent: 500,
+        name: "肉鸽模式 - 终焉 · 南柯一梦",
+        description: "⚔️🛡️⚡ 全属性+3000%，生存还是毁灭",
+        zombieHealthPercent: 3000,
+        zombieAttackPercent: 3000,
+        zombieSpeedPercent: 200,
         waves: [
             { waveNumber: 1, isFirst: true, isLast: false, threatValue: 570, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie", "assassin"] },
             { waveNumber: 2, isFirst: false, isLast: false, threatValue: 2267, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
@@ -532,8 +538,8 @@ const rogueLevels = [
             { waveNumber: 4, isFirst: false, isLast: false, threatValue: 4733, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 5, isFirst: false, isLast: false, threatValue: 6067, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
             { waveNumber: 6, isFirst: false, isLast: false, threatValue: 7467, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 7, isFirst: false, isLast: false, threatValue: 8933, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
-            { waveNumber: 8, isFirst: false, isLast: true, threatValue: 21300, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
+            { waveNumber: 7, isFirst: false, isLast: false, threatValue: 20000, isFastWave: false, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] },
+            { waveNumber: 8, isFirst: false, isLast: true, threatValue: 50000, isFastWave: true, excludedZombieTypes: ["normal", "normalEnhanced", "shieldZombie"] }
         ]
     }
 ];
