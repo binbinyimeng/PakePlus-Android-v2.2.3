@@ -4035,8 +4035,8 @@ startAttack() {
                 
                 // 计算目标位置（僵尸中心）
                 const zombieRect = this.targetZombie.element.getBoundingClientRect();
-                const endX = zombieRect.left - lawnRect.left + zombieRect.width / 2 - (baseSize / 2) * window.innerHeight / 100;
-                const endY = zombieRect.top - lawnRect.top + zombieRect.height / 2 - (baseSize / 2) * window.innerHeight / 100;
+                let endX = zombieRect.left - lawnRect.left + zombieRect.width / 2 - (baseSize / 2) * window.innerHeight / 100;
+                let endY = zombieRect.top - lawnRect.top + zombieRect.height / 2 - (baseSize / 2) * window.innerHeight / 100;
                 
                 // 设置起始位置
                 bullet.style.left = startX + "px";
@@ -4045,14 +4045,23 @@ startAttack() {
                 // 添加到草坪
                 lawnEl.appendChild(bullet);
                 
-                // 保存this引用，以便在动画结束时使用
-                const targetZombie = this.targetZombie;
-                const attackDamage = this.getActualAttack ? this.getActualAttack() : this.attack;
-                const bulletExplosionImage = this.type.bulletExplosionImage;
-                const temperatureBonus = this.temperatureBonus;
-                const knockbackForce = this.knockbackForce;
-                const attackingPlant = this;
-                const plantType = this.type.name; // 保存植物类型名称，用于后续扩展性
+                // 创建子弹数据对象（子弹的核心数据结构）
+                const bulletData = {
+                    targetZombie: this.targetZombie, // 当前目标
+                    originalTarget: this.targetZombie, // 原始目标
+                    searchPerformed: false, // 是否已执行过目标搜索
+                    targetChanged: false, // 目标是否已更换
+                    attackDamage: this.getActualAttack ? this.getActualAttack() : this.attack,
+                    temperatureBonus: this.temperatureBonus,
+                    knockbackForce: this.knockbackForce,
+                    plantType: this.type.name,
+                    attackingPlant: this,
+                    bulletExplosionImage: this.type.bulletExplosionImage,
+                    startX: startX,
+                    startY: startY,
+                    baseSize: baseSize,
+                    initialTargetPos: { x: endX, y: endY } // 初始目标位置
+                };
                 
                 // 获取动画参数（从植物配置读取，支持随机值）
                 let duration = this.type.bulletDuration || 800;
@@ -4061,6 +4070,16 @@ startAttack() {
                 // 如果 bulletMaxHeight 是函数，调用它获取随机值
                 if (typeof maxHeight === 'function') {
                     maxHeight = maxHeight();
+                }
+                
+                // 获取目标位置的辅助函数
+                function getTargetPosition(targetZombie) {
+                    if (!targetZombie || !targetZombie.element) return null;
+                    const zombieRect = targetZombie.element.getBoundingClientRect();
+                    return {
+                        x: zombieRect.left - lawnRect.left + zombieRect.width / 2 - (baseSize / 2) * window.innerHeight / 100,
+                        y: zombieRect.top - lawnRect.top + zombieRect.height / 2 - (baseSize / 2) * window.innerHeight / 100
+                    };
                 }
                 
                 // 创建子弹爆炸动画
@@ -4118,24 +4137,22 @@ startAttack() {
                 
                 // 执行抛物线动画
                 let startTime = null;
+                let hitZombie = null; // 记录被命中的僵尸
+                let hitTime = null; // 记录发现目标的时间
+                const hitDelay = 50; // 0.1秒延迟
                 
                 function animate(timestamp) {
                     if (!startTime) startTime = timestamp;
                     const progress = Math.min((timestamp - startTime) / duration, 1); // 动画进度 0~1
                     
-                    // 计算当前位置（线性插值）- X轴匀速移动
-                    const currentX = startX + (endX - startX) * progress;
+                    // 计算当前位置（始终飞向初始目标位置）
+                    const currentX = bulletData.startX + (bulletData.initialTargetPos.x - bulletData.startX) * progress;
                     
                     // 计算抛物线高度 - Y轴使用抛物线公式
-                    // 使用抛物线公式: y = -4 * h * (t - 0.5)^2 + h
-                    // 其中 h 是最高点高度，t 是进度（0到1）
-                    // 当 t=0 或 t=1 时，高度为 0；当 t=0.5 时，高度为最大值 maxHeight
                     const parabolaHeight = -4 * maxHeight * Math.pow(progress - 0.5, 2) + maxHeight;
-                    const currentY = startY + (endY - startY) * progress - parabolaHeight;
+                    const currentY = bulletData.startY + (bulletData.initialTargetPos.y - bulletData.startY) * progress - parabolaHeight;
                     
                     // 计算当前缩放 - 使用二次函数营造远近感
-                    // 投出时偏小(0.6)，中间最大(1.3)，落到僵尸时最小(0.3)
-                    // 二次函数: scale = a*t² + b*t + c
                     const scale = -2.6 * progress * progress + 2.6 * progress + 0.6;
                     
                     // 更新子弹状态（不改变透明度）
@@ -4144,57 +4161,97 @@ startAttack() {
                     bullet.style.transform = `scale(${scale})`;
                     bullet.style.opacity = 1;
                     
+                    // 如果还没有命中任何僵尸，持续检测周围
+                    if (!hitZombie && window.game && window.game.zombies) {
+                        const hitRadius = config.cellWidth * 0.45; // 命中半径（缩短40%）
+                        
+                        for (const zombie of window.game.zombies) {
+                            if (zombie.health > 0 && zombie.element) {
+                                // 获取僵尸位置
+                                const zombieRect = zombie.element.getBoundingClientRect();
+                                const zombieX = zombieRect.left - lawnRect.left + zombieRect.width / 2;
+                                const zombieY = zombieRect.top - lawnRect.top + zombieRect.height / 2;
+                                
+                                // 计算子弹与僵尸的距离
+                                const dx = currentX + (bulletData.baseSize / 2) * window.innerHeight / 100 - zombieX;
+                                const dy = currentY + (bulletData.baseSize / 2) * window.innerHeight / 100 - zombieY;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                
+                                // 如果距离在命中范围内，就命中这个僵尸
+                                if (distance < hitRadius) {
+                                    hitZombie = zombie;
+                                    hitTime = timestamp; // 记录发现目标的时间
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 如果已经找到了目标，等待延迟后爆炸
+                    if (hitZombie && hitTime && timestamp - hitTime >= hitDelay) {
+                        // 对僵尸造成伤害
+                        hitZombie.takeDamage(bulletData.attackDamage, bulletData.attackingPlant);
+                        
+                        // 播放投手爆炸音效
+                        if (bulletData.plantType === "投手") {
+                            window.soundManager.playSound('Sound effects/thrower_bullet_explosion.mp3', 0.8);
+                        }
+                        
+                        // 播放法师爆炸音效
+                        if (bulletData.plantType === "法师") {
+                            window.soundManager.playSound('Sound effects/mage_bullet_explosion.mp3', 0.8);
+                        }
+                        
+                        // 调用投掷物伤害回调函数（用于扩展性）
+                        if (window.game && typeof window.game.onProjectileHit === 'function') {
+                            window.game.onProjectileHit(hitZombie, bulletData.attackDamage, bulletData.plantType, bulletData.attackingPlant);
+                        }
+                        
+                        // 应用温度附加效果
+                        if (bulletData.temperatureBonus !== 0) {
+                            if (hitZombie.temperature + bulletData.temperatureBonus >= 0) {
+                                hitZombie.temperature = Math.min(200, hitZombie.temperature + bulletData.temperatureBonus);
+                            } else {
+                                hitZombie.temperature = Math.max(-100, hitZombie.temperature + bulletData.temperatureBonus);
+                            }
+                            hitZombie.applyTemperatureEffect();
+                            hitZombie.initTemperatureRegression();
+                        }
+                        
+                        // 应用击退效果
+                        if (bulletData.knockbackForce !== 0 && hitZombie.element) {
+                            const baseCellWidth = 150;
+                            const knockbackScale = config.cellWidth / baseCellWidth;
+                            const normalizedForce = bulletData.knockbackForce * knockbackScale;
+                            const resistanceMultiplier = Math.max(0, 1 - (hitZombie.knockbackResistance / 100));
+                            const actualKnockback = Math.round(normalizedForce * resistanceMultiplier);
+                            
+                            if (actualKnockback !== 0) {
+                                hitZombie.x += actualKnockback;
+                                hitZombie.element.style.left = hitZombie.x + "px";
+                            }
+                        }
+                        
+                        // 播放爆炸动画
+                        if (bulletData.bulletExplosionImage) {
+                            createExplosionAnimation(bulletData.bulletExplosionImage, currentX, currentY, bulletData.baseSize, lawnEl);
+                        }
+                        
+                        // 移除子弹
+                        if (bullet.parentNode) {
+                            bullet.parentNode.removeChild(bullet);
+                        }
+                        
+                        return; // 提前结束动画
+                    }
+                    
                     // 继续动画
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
-                        // 动画结束，对僵尸造成伤害
-                        if (targetZombie && targetZombie.health > 0) {
-                            targetZombie.takeDamage(attackDamage, attackingPlant);
-                            
-                            // 播放投手爆炸音效
-                            if (plantType === "投手") {
-                                window.soundManager.playSound('Sound effects/thrower_bullet_explosion.mp3', 0.8);
-                            }
-                            
-                            // 播放法师爆炸音效
-                            if (plantType === "法师") {
-                                window.soundManager.playSound('Sound effects/mage_bullet_explosion.mp3', 0.8);
-                            }
-                            
-                            // 调用投掷物伤害回调函数（用于扩展性）
-                            if (window.game && typeof window.game.onProjectileHit === 'function') {
-                                window.game.onProjectileHit(targetZombie, attackDamage, plantType, attackingPlant);
-                            }
-                            
-                            // 应用温度附加效果
-                            if (temperatureBonus !== 0) {
-                                // 确保温度在 -100 到 200 之间
-                                if (targetZombie.temperature + temperatureBonus >= 0) {
-                                    targetZombie.temperature = Math.min(200, targetZombie.temperature + temperatureBonus);
-                                } else {
-                                    targetZombie.temperature = Math.max(-100, targetZombie.temperature + temperatureBonus);
-                                }
-                                targetZombie.applyTemperatureEffect();
-                                targetZombie.initTemperatureRegression();
-                            }
-                            
-                            // 应用击退效果
-                            if (knockbackForce !== 0 && targetZombie.element) {
-                                // 计算击退抗性影响
-                                const resistanceMultiplier = Math.max(0, 1 - (targetZombie.knockbackResistance / 100));
-                                const actualKnockback = Math.round(knockbackForce * resistanceMultiplier);
-                                
-                                if (actualKnockback !== 0) {
-                                    targetZombie.x += actualKnockback;
-                                    targetZombie.element.style.left = targetZombie.x + "px";
-                                }
-                            }
-                        }
-                        
-                        // 如果有爆炸图片，播放爆炸动画
-                        if (bulletExplosionImage) {
-                            createExplosionAnimation(bulletExplosionImage, endX, endY, baseSize, lawnEl);
+                        // 到达了终点，但没有找到可攻击的目标，只播放爆炸动画
+                        if (bulletData.bulletExplosionImage) {
+                            createExplosionAnimation(bulletData.bulletExplosionImage, bulletData.initialTargetPos.x, bulletData.initialTargetPos.y, bulletData.baseSize, lawnEl);
                         }
                         
                         // 移除子弹
@@ -4208,6 +4265,45 @@ startAttack() {
                 requestAnimationFrame(animate);
             }
             
+            // 在指定位置附近搜索新目标
+            // searchX, searchY: 搜索中心位置（像素）
+            // searchRadius: 搜索半径（像素，默认1个格子宽度）
+            // excludeZombie: 排除的僵尸（可选）
+            findNewTargetNearPosition(searchX, searchY, searchRadius = null, excludeZombie = null) {
+                if (!window.game || !window.game.zombies) return null;
+                
+                // 设置搜索半径，默认使用1个格子宽度
+                const actualSearchRadius = searchRadius !== null ? searchRadius : config.cellWidth;
+                
+                let closestZombie = null;
+                let closestDistance = Infinity;
+                
+                for (const zombie of window.game.zombies) {
+                    // 跳过已排除的僵尸
+                    if (excludeZombie && zombie === excludeZombie) continue;
+                    // 跳过已死亡的僵尸
+                    if (zombie.health <= 0) continue;
+                    if (!zombie.element) continue;
+                    
+                    // 计算僵尸位置
+                    const zombieX = zombie.x;
+                    const zombieY = zombie.y;
+                    
+                    // 计算距离
+                    const dx = zombieX - searchX;
+                    const dy = zombieY - searchY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 如果在搜索范围内且距离更近
+                    if (distance <= actualSearchRadius && distance < closestDistance) {
+                        closestZombie = zombie;
+                        closestDistance = distance;
+                    }
+                }
+                
+                return closestZombie;
+            }
+            
             // 击退僵尸
             knockbackZombie(zombie, force) {
                 if (!zombie || !zombie.element) return;
@@ -4216,11 +4312,16 @@ startAttack() {
                 }
                 if (force === 0) return;
                 
+                // 计算标准化击退距离：基于格子宽度，保证不同屏幕比例下击退效果一致
+                const baseCellWidth = 150; // 基准格子宽度
+                const knockbackScale = config.cellWidth / baseCellWidth; // 击退比例
+                const normalizedForce = force * knockbackScale;
+                
                 // 计算击退抗性影响
                 const resistanceMultiplier = Math.max(0, 1 - (zombie.knockbackResistance / 100));
-                const actualKnockback = Math.round(force * resistanceMultiplier);
+                const actualKnockback = Math.round(normalizedForce * resistanceMultiplier);
                 
-                console.log(`[击退系统] 植物: ${this.name}, 击退力: ${force}, 僵尸: ${zombie.name}, 抗性: ${zombie.knockbackResistance}%`);
+                console.log(`[击退系统] 植物: ${this.name}, 击退力: ${force}, 标准化击退: ${normalizedForce}, 僵尸: ${zombie.name}, 抗性: ${zombie.knockbackResistance}%`);
                 console.log(`[击退系统] 抗性倍率: ${resistanceMultiplier}, 实际击退: ${actualKnockback}`);
                 console.log(`[击退系统] 僵尸位置: ${zombie.x} -> ${zombie.x + actualKnockback}`);
                 
@@ -4608,9 +4709,14 @@ startAttack() {
                                     
                                     // 应用击退效果
                                     if (knockbackForce !== 0 && zombie.element) {
+                                        // 计算标准化击退距离：基于格子宽度，保证不同屏幕比例下击退效果一致
+                                        const baseCellWidth = 150; // 基准格子宽度
+                                        const knockbackScale = config.cellWidth / baseCellWidth; // 击退比例
+                                        const normalizedForce = knockbackForce * knockbackScale;
+                                        
                                         // 计算击退抗性影响
                                         const resistanceMultiplier = Math.max(0, 1 - (zombie.knockbackResistance / 100));
-                                        const actualKnockback = Math.round(knockbackForce * resistanceMultiplier);
+                                        const actualKnockback = Math.round(normalizedForce * resistanceMultiplier);
                                         
                                         if (actualKnockback !== 0) {
                                             zombie.x += actualKnockback;
@@ -5423,8 +5529,8 @@ startAttack() {
                 const lawnRect = document.getElementById("lawn").getBoundingClientRect();
                 const gridRect = lawnGridEl.getBoundingClientRect();
                 
-                // 计算格子大小
-                const cellWidth = gridRect.width / config.gridCols;
+                // 计算格子大小（使用全局cellWidth）
+                const cellWidth = config.cellWidth || gridRect.width / config.gridCols;
                 const cellHeight = gridRect.height / config.gridRows;
                 
                 // 计算僵尸所在的格子（使用元素中心点）
@@ -5458,10 +5564,15 @@ startAttack() {
                     }
                 }
                 
-                // 如果没有植物，继续移动（使用实际移动速度）
+                // 如果没有植物，继续移动（使用基于格子宽度的实际移动速度）
                 if (!hasPlant) {
                     const actualMoveSpeed = this.getActualMoveSpeed();
-                    this.x -= actualMoveSpeed;
+                    // 计算标准化移动距离：每个格子宽度/100作为基础速度，保证不同屏幕比例下移动速度一致
+                    // 假设基准格子宽度为100像素时，speed为1的僵尸每帧移动1像素
+                    const baseCellWidth = 150; // 基准格子宽度
+                    const speedScale = config.cellWidth / baseCellWidth; // 速度比例
+                    const normalizedMoveSpeed = actualMoveSpeed * speedScale;
+                    this.x -= normalizedMoveSpeed;
                     if (this.element) {
                         this.element.style.left = this.x + "px";
                     }
@@ -5528,6 +5639,10 @@ startAttack() {
             // 独立移动：朝向最近的植物移动
             moveTowardsNearestPlant(plants) {
                 const actualMoveSpeed = this.getActualMoveSpeed();
+                // 计算标准化移动距离：每个格子宽度/100作为基础速度，保证不同屏幕比例下移动速度一致
+                const baseCellWidth = 150; // 基准格子宽度
+                const speedScale = config.cellWidth / baseCellWidth; // 速度比例
+                const normalizedMoveSpeed = actualMoveSpeed * speedScale;
                 
                 // 找到最近的植物
                 let nearestPlant = null;
@@ -5549,7 +5664,7 @@ startAttack() {
                 
                 if (nearestPlant && minDistance > 0) {
                     // 先检查是否在攻击范围内
-                    const attackRange = this.type.attackRange || actualMoveSpeed * 2;
+                    const attackRange = this.type.attackRange || normalizedMoveSpeed * 2;
                     
                     // 如果在攻击范围内，直接攻击，不移动
                     if (minDistance <= attackRange) {
@@ -5574,8 +5689,8 @@ startAttack() {
                     const dirY = dy / length;
                     
                     // 移动僵尸
-                    this.x += dirX * actualMoveSpeed;
-                    this.y += dirY * actualMoveSpeed;
+                    this.x += dirX * normalizedMoveSpeed;
+                    this.y += dirY * normalizedMoveSpeed;
                     
                     // 更新元素位置
                     if (this.element) {
@@ -5584,7 +5699,7 @@ startAttack() {
                     }
                 } else {
                     // 如果没有找到植物，继续向左移动
-                    this.x -= actualMoveSpeed;
+                    this.x -= normalizedMoveSpeed;
                     if (this.element) {
                         this.element.style.left = this.x + "px";
                     }
@@ -6099,8 +6214,8 @@ startAttack() {
                 bulletAnimationType: "throw",
                 bulletOffset: { x: 0, y: -3 * window.innerHeight / 200 },
                 bulletSize: 0.8,
-                bulletDuration: 800, // 动画持续时间（毫秒）
-                bulletMaxHeight: 10 * window.innerHeight / 200, // 抛物线最高点高度（vmin单位）
+                bulletDuration: 1200, // 动画持续时间（毫秒）
+                bulletMaxHeight: 10 * window.innerHeight / 150, // 抛物线最高点高度（vmin单位）
                 health: 50,
                 attack: 20,
                 attackSpeed: 3000,
@@ -6560,6 +6675,7 @@ assassin: {
             plantSelectionTimer: null, // 植物选择超时计时器
             levelTime: 0,            // 关卡时长（秒）
             levelTimeTimer: null,     // 关卡时长计时器
+            cellWidth: 0,           // 单个格子的宽度（像素）
             
             // 僵尸刷新间隔系统
             nextSpawnIntervalModifier: 1.0,  // 下一个僵尸的间隔倍率
@@ -6604,6 +6720,22 @@ assassin: {
             initGame();
         }
 
+        // 计算并设置格子宽度
+        function updateCellWidth() {
+            const lawnGridEl = document.getElementById("lawnGrid");
+            if (!lawnGridEl) return;
+            
+            const gridRect = lawnGridEl.getBoundingClientRect();
+            config.cellWidth = gridRect.width / config.gridCols;
+            console.log("[游戏] 更新格子宽度:", config.cellWidth, "像素");
+        }
+
+        // 窗口大小改变时更新格子宽度
+        window.addEventListener('resize', () => {
+            // 延迟一下，确保DOM已经更新
+            setTimeout(updateCellWidth, 100);
+        });
+
         // 初始化游戏
         function initGame() {
             console.log("[游戏] 初始化游戏，当前关卡:", config.currentLevel);
@@ -6619,6 +6751,12 @@ assassin: {
                 sunCountEl.textContent = config.sun;
             }
 
+            // 初始化草坪
+            initLawn();
+            
+            // 计算格子宽度（必须在initLawn之后）
+            updateCellWidth();
+
             // 如果当前关卡是肉鸽模式，先初始化彬彬升级系统
             if (config.currentLevel >= 101 && config.currentLevel <= 198) {
                 console.log("[游戏] 检测到肉鸽模式，初始化彬彬升级系统");
@@ -6627,8 +6765,6 @@ assassin: {
                 }
             }
 
-            // 初始化草坪
-            initLawn();
             // 初始化植物栏
             initPlantBar();
             // 启动阳光生成器
@@ -7804,15 +7940,11 @@ function spawnSunFromPlant(plant) {
                 // 计算实际价格（考虑卡片增强效果）
                 const actualCost = Math.max(1, Math.round(plant.cost * (1 + enhancements.costPercent / 100)));
                 
-                // 计算攻击速度加成显示
-                const attackSpeedBonus = enhancements.attackSpeedPercent;
-                const attackSpeedDisplay = attackSpeedBonus !== 0 ? `<div class="attack-speed-bonus">攻速${attackSpeedBonus > 0 ? '+' : ''}${attackSpeedBonus}%</div>` : '';
-                
                 const card = document.createElement("div");
                 card.className = "plant-card";
                 // 使用cardIcon属性显示卡槽图标，如果没有则使用icon属性
                 const cardIcon = plant.cardIcon || plant.icon;
-                card.innerHTML = `${cardIcon}<div class="price plant-price">${actualCost}</div>${attackSpeedDisplay}`;
+                card.innerHTML = `${cardIcon}<div class="price plant-price">${actualCost}</div>`;
                 // 查找植物在原始数组中的索引
                 const originalIndex = config.plants.findIndex(p => p.name === plant.name);
                 card.dataset.index = originalIndex;
@@ -8632,9 +8764,6 @@ function spawnSunFromPlant(plant) {
                 currentDreamPoints = rogueCards.cardShopSystem.getRemainingPoints();
                 document.getElementById("dreamPointsCount").textContent = currentDreamPoints;
                 
-                // 播放 lailelaodi 音效
-                window.soundManager.playSound('Sound effects/lailelaodi.mp3', 0.8);
-                
                 // 显示植物选择界面
                 showPlantSelection(purchasedCard);
             } else {
@@ -9394,8 +9523,40 @@ function showPlantSelection(card) {
             document.getElementById("dreamPointsCount").textContent = currentDreamPoints;
             renderCards();
             
-            // 播放 bruh 音效
-            window.soundManager.playSound('Sound effects/bruh.mp3', 0.8);
+            // 根据刷新卡片的最大稀有度播放不同音效
+            const availableCards = rogueCards.cardShopSystem.availableCards;
+            if (availableCards && availableCards.length > 0) {
+                // 稀有度排序：普通 < 稀有 < 史诗 < 传说 < 逆天
+                const rarityRank = {
+                    "普通": 0,
+                    "稀有": 1,
+                    "史诗": 2,
+                    "传说": 3,
+                    "逆天": 4
+                };
+                
+                let maxRarity = availableCards.reduce((max, card) => {
+                    const currentRank = rarityRank[card.rarity.name];
+                    const maxRank = rarityRank[max.name];
+                    return currentRank > maxRank ? card.rarity : max;
+                }, availableCards[0].rarity);
+                
+                // 根据最大稀有度播放音效
+                let soundFile = '';
+                if (maxRarity.name === "普通") {
+                    soundFile = 'Sound effects/b1.mp3';
+                } else if (maxRarity.name === "稀有" || maxRarity.name === "史诗") {
+                    soundFile = 'Sound effects/b2.mp3';
+                } else if (maxRarity.name === "传说") {
+                    soundFile = 'Sound effects/b3.mp3';
+                } else if (maxRarity.name === "逆天") {
+                    soundFile = 'Sound effects/b4.mp3';
+                }
+                
+                if (soundFile) {
+                    window.soundManager.playSound(soundFile, 0.8);
+                }
+            }
             
             showToast("已刷新卡片，消耗10梦境点数");
         }
