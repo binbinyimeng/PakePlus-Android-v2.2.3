@@ -47,39 +47,6 @@ const levels = [
                 ]
             },
             {
-                waveNumber: 5,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 1800,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 6,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 1500,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 7,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 1200,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 1 }
-                ]
-            },
-            {
                 waveNumber: 8,
                 isFirst: false,
                 isLast: false,
@@ -91,101 +58,13 @@ const levels = [
                 ]
             },
             {
-                waveNumber: 9,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 900,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 10,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 800,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 2 }
-                ]
-            },
-            {
-                waveNumber: 11,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 700,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 2 }
-                ]
-            },
-            {
-                waveNumber: 12,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 600,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 2 }
-                ]
-            },
-            {
                 waveNumber: 13,
                 isFirst: false,
                 isLast: false,
                 spawnInterval: 500,
-                waveInterval: 5000,
+                waveInterval: 10000,
                 zombies: [
                     { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 2 }
-                ]
-            },
-            {
-                waveNumber: 14,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 450,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 3 }
-                ]
-            },
-            {
-                waveNumber: 15,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 400,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 2 }
-                ]
-            },
-            {
-                waveNumber: 16,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 350,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 3 },
-                    { type: "normalEnhanced", count: 3 }
-                ]
-            },
-            {
-                waveNumber: 17,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 300,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 4 },
                     { type: "normalEnhanced", count: 2 }
                 ]
             },
@@ -281,129 +160,6 @@ const levels = [
                 waveInterval: 5000,
                 zombies: [
                     { type: "normal", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 8,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 800,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normalEnhanced", count: 2 },
-                    { type: "big", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 9,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 700,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 10,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 600,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normalEnhanced", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 11,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 550,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 1 },
-                    { type: "big", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 12,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 500,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 13,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 450,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normalEnhanced", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 14,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 400,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 1 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 15,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 350,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 1 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 16,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 300,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 2 },
-                    { type: "big", count: 1 },
-                    { type: "bigEnhanced", count: 1 }
-                ]
-            },
-            {
-                waveNumber: 17,
-                isFirst: false,
-                isLast: false,
-                spawnInterval: 250,
-                waveInterval: 5000,
-                zombies: [
-                    { type: "normal", count: 2 },
-                    { type: "normalEnhanced", count: 2 },
                     { type: "big", count: 1 },
                     { type: "bigEnhanced", count: 1 }
                 ]
