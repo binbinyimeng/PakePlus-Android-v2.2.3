@@ -957,6 +957,11 @@
             font-weight: 500;
             transition: all 0.25s;
         }
+
+        .button-group {
+            display: flex;
+            gap: 0.3vmin;
+        }
         
         .catalog-button-small:hover {
             background: linear-gradient(135deg, #fffbeb, #fff3cd);
@@ -1235,6 +1240,29 @@
             margin: 0;
         }
         
+        .header-buttons {
+            display: flex;
+            gap: 0.3vmin;
+            align-items: center;
+        }
+        
+        .reset-button {
+            background: linear-gradient(135deg, #e2e3e5, #d6d8db);
+            border: 0.08vmin solid #cbccce;
+            border-radius: 0.3vmin;
+            color: #495057;
+            padding: 0.25vmin 0.6vmin;
+            cursor: pointer;
+            font-size: 1.6vmin;
+            font-weight: 500;
+            transition: all 0.25s;
+        }
+        
+        .reset-button:hover {
+            background: linear-gradient(135deg, #d6d8db, #e2e3e5);
+            transform: scale(1.05);
+        }
+        
         .close-catalog-button {
             background: linear-gradient(135deg, #f8d7da, #f5c6cb);
             border: 0.08vmin solid #f1aeb5;
@@ -1460,6 +1488,69 @@
 
         .disable-card-button:hover {
             transform: scale(1.05);
+        }
+
+        /* 升级界面样式 */
+        .coins-display {
+            background: linear-gradient(135deg, #fff9c4, #fff176);
+            border-radius: 0.3vmin;
+            padding: 0.4vmin;
+            margin-bottom: 0.4vmin;
+            border: 0.1vmin solid #ffc107;
+            font-size: 1.5vmin;
+            font-weight: 600;
+            color: #e65100;
+            text-align: center;
+        }
+
+        .upgrades-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vmin;
+        }
+
+        .upgrade-option {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 0.5vmin;
+            padding: 0.8vmin;
+            border: 0.1vmin solid #81c784;
+        }
+
+        .upgrade-option h3 {
+            margin: 0 0 0.3vmin 0;
+            font-size: 1.6vmin;
+            color: #2e7d32;
+        }
+
+        .upgrade-description {
+            margin: 0 0 0.3vmin 0;
+            font-size: 1.3vmin;
+            color: #388e3c;
+        }
+
+        .upgrade-cost {
+            margin: 0 0 0.5vmin 0;
+            font-size: 1.3vmin;
+            font-weight: 600;
+            color: #1b5e20;
+        }
+
+        .upgrade-button {
+            padding: 0.4vmin 0.8vmin;
+            font-size: 1.4vmin;
+            border: none;
+            border-radius: 0.3vmin;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #66bb6a, #43a047);
+            color: white;
+            width: 100%;
+        }
+
+        .upgrade-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0.2vmin 0.5vmin rgba(0, 0, 0, 0.2);
         }
 
         /* 植物选择项 */
@@ -2092,7 +2183,10 @@
             <div class="dream-points-display">
                 <span>梦境点数: </span>
                 <span id="dreamPointsCount">0</span>
-                <button class="catalog-button-small" onclick="openCardCatalog()">⚙️ 卡组编辑</button>
+                <div class="button-group">
+                    <button class="catalog-button-small" onclick="openUpgradeModal()">⬆️ 升级</button>
+                    <button class="catalog-button-small" onclick="openCardCatalog()">⚙️ 卡组编辑</button>
+                </div>
             </div>
             
             <div class="shop-layout">
@@ -2152,7 +2246,10 @@
         <div class="card-catalog-content">
             <div class="catalog-header">
                 <h2>⚙️ 卡组编辑器</h2>
-                <button class="close-catalog-button" onclick="closeCardCatalog()">✕</button>
+                <div class="header-buttons">
+                    <button class="reset-button" onclick="resetAllData()">🔄 重置</button>
+                    <button class="close-catalog-button" onclick="closeCardCatalog()">✕</button>
+                </div>
             </div>
             
             <!-- 成长信息显示 -->
@@ -2168,6 +2265,27 @@
             <!-- 卡牌展示区 -->
             <div class="catalog-cards-container" id="catalogCardsContainer">
                 <!-- 卡牌将动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 升级界面弹窗 -->
+    <div class="card-catalog-modal" id="upgradeModal" style="display: none;">
+        <div class="card-catalog-content">
+            <div class="catalog-header">
+                <h2>⬆️ 升级</h2>
+                <button class="close-catalog-button" onclick="closeUpgradeModal()">✕</button>
+            </div>
+            
+            <!-- 拉布币币显示 -->
+            <div class="coins-display" id="coinsDisplay">
+                <span>拉布币币: </span>
+                <span id="coinsCount">0</span>
+            </div>
+            
+            <!-- 升级选项区 -->
+            <div class="upgrades-container" id="upgradesContainer">
+                <!-- 升级选项将动态生成 -->
             </div>
         </div>
     </div>
@@ -2692,10 +2810,19 @@ this.yRange = Math.max(0, Math.round(baseYRange + (enhancements.yRangeValue || 0
                 // 追击状态跟踪
                 this.currentChaseCount = 0;
                 this.canChase = true;
+                this.chaseTimeouts = []; // 追击计时器数组
                 
                 // 重置追击计数
                 this.resetChaseCount = () => {
                     this.currentChaseCount = 0;
+                };
+                
+                // 清除所有追击计时器
+                this.clearAllChaseTimeouts = () => {
+                    this.chaseTimeouts.forEach(timeoutId => {
+                        clearTimeout(timeoutId);
+                    });
+                    this.chaseTimeouts = [];
                 };
                 
                 // 初始化温度回归
@@ -2765,9 +2892,12 @@ this.yRange = Math.max(0, Math.round(baseYRange + (enhancements.yRangeValue || 0
                 this.targetZombie = originalTarget;
                 
                 // 等待追击间隔后尝试下一次追击
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
                     this.tryNextChase(targetZombieParam, currentCount + 1);
                 }, this.chaseConfig.chaseInterval);
+                
+                // 保存计时器ID
+                this.chaseTimeouts.push(timeoutId);
             }
 
             // 追击攻击
@@ -2801,7 +2931,7 @@ this.yRange = Math.max(0, Math.round(baseYRange + (enhancements.yRangeValue || 0
                     // 应用温度附加效果
                     if (this.temperatureBonus !== 0) {
                         // 确保温度在 -100 到 200 之间
-                        this.targetZombie.temperature = Math.max(-100, Math.min(200, this.targetZombie.temperature + this.temperatureBonus));
+                        this.targetZombie.temperature = Math.max(-1000, Math.min(1000, this.targetZombie.temperature + this.temperatureBonus));
                         this.targetZombie.applyTemperatureEffect();
                         this.targetZombie.initTemperatureRegression();
                     }
@@ -2833,7 +2963,7 @@ this.yRange = Math.max(0, Math.round(baseYRange + (enhancements.yRangeValue || 0
                     // 应用温度附加效果
                     if (this.temperatureBonus !== 0) {
                         // 确保温度在 -100 到 200 之间
-                        this.targetZombie.temperature = Math.max(-100, Math.min(200, this.targetZombie.temperature + this.temperatureBonus));
+                        this.targetZombie.temperature = Math.max(-1000, Math.min(1000, this.targetZombie.temperature + this.temperatureBonus));
                         this.targetZombie.applyTemperatureEffect();
                         this.targetZombie.initTemperatureRegression();
                         console.log(`[温度系统] 附加: ${this.temperatureBonus}, 目标温度: ${this.targetZombie.temperature}`);
@@ -3302,6 +3432,11 @@ startAttack() {
             
             // 攻击僵尸
             attackZombies() {
+                // 清除所有未完成的追击子弹
+                if (this.clearAllChaseTimeouts) {
+                    this.clearAllChaseTimeouts();
+                }
+                
                 // 向日葵特殊逻辑：生成阳光
                 if (this.name === "向日葵") {
                     if (!this.element) return;
@@ -3424,9 +3559,9 @@ startAttack() {
                                 if (this.type.temperatureBonus !== undefined && this.type.temperatureBonus !== 0) {
                                     // 确保温度在 -100 到 200 之间
                                     if (targetPlant.temperature + this.type.temperatureBonus >= 0) {
-                                        targetPlant.temperature = Math.min(200, targetPlant.temperature + this.type.temperatureBonus);
+                                        targetPlant.temperature = Math.min(1000, targetPlant.temperature + this.type.temperatureBonus);
                                     } else {
-                                        targetPlant.temperature = Math.max(-100, targetPlant.temperature + this.type.temperatureBonus);
+                                        targetPlant.temperature = Math.max(-1000, targetPlant.temperature + this.type.temperatureBonus);
                                     }
                                     targetPlant.applyTemperatureEffect();
                                 }
@@ -3513,9 +3648,9 @@ startAttack() {
                                     if (this.temperatureBonus !== 0) {
                                         // 确保温度在 -100 到 200 之间
                                         if (targetZombie.temperature + this.temperatureBonus >= 0) {
-                                            targetZombie.temperature = Math.min(200, targetZombie.temperature + this.temperatureBonus);
+                                            targetZombie.temperature = Math.min(1000, targetZombie.temperature + this.temperatureBonus);
                                         } else {
-                                            targetZombie.temperature = Math.max(-100, targetZombie.temperature + this.temperatureBonus);
+                                            targetZombie.temperature = Math.max(-1000, targetZombie.temperature + this.temperatureBonus);
                                         }
                                         targetZombie.applyTemperatureEffect();
                                         targetZombie.initTemperatureRegression();
@@ -3775,9 +3910,9 @@ startAttack() {
                                         if (this.temperatureBonus !== 0) {
                                             // 确保温度在 -100 到 200 之间
                                             if (targetZombie.temperature + this.temperatureBonus >= 0) {
-                                                targetZombie.temperature = Math.min(200, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.min(1000, targetZombie.temperature + this.temperatureBonus);
                                             } else {
-                                                targetZombie.temperature = Math.max(-100, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.max(-1000, targetZombie.temperature + this.temperatureBonus);
                                             }
                                             targetZombie.applyTemperatureEffect();
                                             targetZombie.initTemperatureRegression();
@@ -3795,9 +3930,9 @@ startAttack() {
                                         if (this.temperatureBonus !== 0) {
                                             // 确保温度在 -100 到 200 之间
                                             if (targetZombie.temperature + this.temperatureBonus >= 0) {
-                                                targetZombie.temperature = Math.min(200, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.min(1000, targetZombie.temperature + this.temperatureBonus);
                                             } else {
-                                                targetZombie.temperature = Math.max(-100, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.max(-1000, targetZombie.temperature + this.temperatureBonus);
                                             }
                                             targetZombie.applyTemperatureEffect();
                                             targetZombie.initTemperatureRegression();
@@ -3819,9 +3954,9 @@ startAttack() {
                                         if (this.temperatureBonus !== 0) {
                                             // 确保温度在 -100 到 200 之间
                                             if (targetZombie.temperature + this.temperatureBonus >= 0) {
-                                                targetZombie.temperature = Math.min(200, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.min(1000, targetZombie.temperature + this.temperatureBonus);
                                             } else {
-                                                targetZombie.temperature = Math.max(-100, targetZombie.temperature + this.temperatureBonus);
+                                                targetZombie.temperature = Math.max(-1000, targetZombie.temperature + this.temperatureBonus);
                                             }
                                             targetZombie.applyTemperatureEffect();
                                             targetZombie.initTemperatureRegression();
@@ -4210,9 +4345,9 @@ startAttack() {
                         // 应用温度附加效果
                         if (bulletData.temperatureBonus !== 0) {
                             if (hitZombie.temperature + bulletData.temperatureBonus >= 0) {
-                                hitZombie.temperature = Math.min(200, hitZombie.temperature + bulletData.temperatureBonus);
+                                hitZombie.temperature = Math.min(1000, hitZombie.temperature + bulletData.temperatureBonus);
                             } else {
-                                hitZombie.temperature = Math.max(-100, hitZombie.temperature + bulletData.temperatureBonus);
+                                hitZombie.temperature = Math.max(-1000, hitZombie.temperature + bulletData.temperatureBonus);
                             }
                             hitZombie.applyTemperatureEffect();
                             hitZombie.initTemperatureRegression();
@@ -4397,6 +4532,12 @@ startAttack() {
                 else if (source && source.temperatureBonus < 0 && this.temperature > 0) {
                     finalDamage *= 2;
                     isQuench = true;
+                }
+                
+                // 负温度伤害机制：每有-10点温度，增加1%受到的伤害
+                if (this.temperature < 0) {
+                    const coldDamageBonus = Math.floor(Math.abs(this.temperature) / 10);
+                    finalDamage *= (1 + coldDamageBonus / 100);
                 }
                 
                 // 应用隐秘伤害减免
@@ -4699,9 +4840,9 @@ startAttack() {
                                     if (plantInstance.temperatureBonus !== 0) {
                                         // 确保温度在 -100 到 200 之间
                                         if (zombie.temperature + plantInstance.temperatureBonus >= 0) {
-                                            zombie.temperature = Math.min(200, zombie.temperature + plantInstance.temperatureBonus);
+                                            zombie.temperature = Math.min(1000, zombie.temperature + plantInstance.temperatureBonus);
                                         } else {
-                                            zombie.temperature = Math.max(-100, zombie.temperature + plantInstance.temperatureBonus);
+                                            zombie.temperature = Math.max(-1000, zombie.temperature + plantInstance.temperatureBonus);
                                         }
                                         zombie.applyTemperatureEffect();
                                         zombie.initTemperatureRegression();
@@ -4777,16 +4918,13 @@ startAttack() {
                     let healthChange;
                     // 判断是否是温度伤害（特殊标记值-9999）
                     if (this.percentHealthPerSecond === -9999 && this.temperature > 0) {
-                        // 两段式温度伤害计算
-                        if (this.temperature <= 100) {
-                            // 第一段：0-100，固定伤害
-                            healthChange = this.temperature;
-                        } else {
-                            // 第二段：101-200，100点固定伤害 + (温度-100)×1%当前生命值伤害
-                            const fixedDamage = 100;
-                            const percentDamage = (this.temperature - 100) * this.health / 100;
-                            healthChange = fixedDamage + percentDamage;
-                        }
+                        // 新温度伤害计算：每一点温度扣除一点生命值，每有十点温度再额外扣除1%当前生命值
+                        const fixedDamage = this.temperature; // 每一点温度扣除一点生命值
+                        const percentDamage = Math.floor(this.temperature / 10) * this.health / 100; // 每有十点温度额外扣除1%当前生命值
+                        healthChange = fixedDamage + percentDamage;
+                        
+                        // 应用护甲减伤：最终伤害 = 伤害 - 护甲，最低为1
+                        healthChange = Math.max(1, healthChange - (this.armor || 0));
                     } else {
                         // 普通百分比生命扣除/回血
                         healthChange = (this.health * this.percentHealthPerSecond) / 100;
@@ -4841,11 +4979,11 @@ startAttack() {
             
             // 应用温度效果
             applyTemperatureEffect() {
-                // 温度范围限制：-100 到 200
+                // 温度范围限制：-1000 到 1000
                 if (this.temperature >= 0) {
-                    this.temperature = Math.min(200, this.temperature);
+                    this.temperature = Math.min(1000, this.temperature);
                 } else {
-                    this.temperature = Math.max(-100, this.temperature);
+                    this.temperature = Math.max(-1000, this.temperature);
                 }
                 
                 // 获取当前温度状态
@@ -4981,7 +5119,8 @@ startAttack() {
                 if (absTemperature < 10) {
                     interval = 1000; // 1秒
                 } else {
-                    const k = Math.floor(absTemperature / 10);
+                    // 最多10个档位，温度100时达到最小间隔
+                    const k = Math.min(10, Math.floor(absTemperature / 10));
                     interval = 1000 / (k + 1);
                 }
                 
@@ -4996,9 +5135,9 @@ startAttack() {
                     
                     // 确保温度在 -100 到 200 之间
                     if (this.temperature >= 0) {
-                        this.temperature = Math.min(200, this.temperature);
+                        this.temperature = Math.min(1000, this.temperature);
                     } else {
-                        this.temperature = Math.max(-100, this.temperature);
+                        this.temperature = Math.max(-1000, this.temperature);
                     }
                     
                     // 应用温度效果
@@ -5063,6 +5202,11 @@ startAttack() {
                 this.baseSpeed = baseSpeed; // 保存基础速度
                 this.temperatureSensitivity = zombieType.temperatureSensitivity || 100; // 温度敏感度（百分比）
                 this.knockbackResistance = zombieType.knockbackResistance || 0; // 击退抗性（百分比，0-100）
+                this.isHoleZombieTransformed = false; // 洞僵尸是否已经变形
+                this.holeZombieRevertTimer = null; // 洞僵尸返回原状态的计时器
+                this.holeZombieTemperatureHealTimer = null; // 洞僵尸第二状态温度附加回血计时器
+                this.holeZombieCooldownTimer = null; // 洞僵尸变形冷却计时器
+                this.isHoleZombieOnCooldown = false; // 洞僵尸是否处于冷却状态
                 
                 // 初始化生命计时器
                 this.initHealthTimer();
@@ -5096,16 +5240,13 @@ startAttack() {
                     let healthChange;
                     // 判断是否是温度伤害（特殊标记值-9999）
                     if (this.percentHealthPerSecond === -9999 && this.temperature > 0) {
-                        // 两段式温度伤害计算
-                        if (this.temperature <= 100) {
-                            // 第一段：0-100，固定伤害
-                            healthChange = this.temperature;
-                        } else {
-                            // 第二段：101-200，100点固定伤害 + (温度-100)×1%当前生命值伤害
-                            const fixedDamage = 100;
-                            const percentDamage = (this.temperature - 100) * this.health / 100;
-                            healthChange = fixedDamage + percentDamage;
-                        }
+                        // 新温度伤害计算：每一点温度扣除一点生命值，每有十点温度再额外扣除1%当前生命值
+                        const fixedDamage = this.temperature; // 每一点温度扣除一点生命值
+                        const percentDamage = Math.floor(this.temperature / 10) * this.health / 100; // 每有十点温度额外扣除1%当前生命值
+                        healthChange = fixedDamage + percentDamage;
+                        
+                        // 应用护甲减伤：最终伤害 = 伤害 - 护甲，最低为1
+                        healthChange = Math.max(1, healthChange - (this.armor || 0));
                     } else {
                         // 普通百分比生命扣除/回血
                         healthChange = (this.health * this.percentHealthPerSecond) / 100;
@@ -5162,11 +5303,11 @@ startAttack() {
             
             // 应用温度效果
             applyTemperatureEffect() {
-                // 温度范围限制：-100 到 200
+                // 温度范围限制：-1000 到 1000
                 if (this.temperature >= 0) {
-                    this.temperature = Math.min(200, this.temperature);
+                    this.temperature = Math.min(1000, this.temperature);
                 } else {
-                    this.temperature = Math.max(-100, this.temperature);
+                    this.temperature = Math.max(-1000, this.temperature);
                 }
                 
                 // 获取当前温度状态
@@ -5299,7 +5440,8 @@ startAttack() {
                 if (absTemperature < 10) {
                     interval = 1000; // 1秒
                 } else {
-                    const k = Math.floor(absTemperature / 10);
+                    // 最多10个档位，温度100时达到最小间隔
+                    const k = Math.min(10, Math.floor(absTemperature / 10));
                     interval = 1000 / (k + 1);
                 }
                 
@@ -5309,20 +5451,26 @@ startAttack() {
                 // 敏感度200%：间隔加倍，温度回归变慢
                 interval = interval * (this.temperatureSensitivity / 100);
                 
+                // 添加间隔限制：最小10ms，最大1000ms
+                interval = Math.max(10, Math.min(1000, interval));
+                
                 // 使用 setTimeout 而不是 setInterval，因为每次温度变化后间隔可能改变
                 this.temperatureRegressionTimer = setTimeout(() => {
-                    // 温度向 0 回归一格
+                    // 计算归零数值：每有100温度值增加2格
+                    const temperatureStep = 1 + Math.floor(absTemperature / 100) * 2;
+                    
+                    // 温度向 0 回归
                     if (this.temperature > 0) {
-                        this.temperature = Math.round(this.temperature) - 1;
+                        this.temperature = Math.round(this.temperature) - temperatureStep;
                     } else if (this.temperature < 0) {
-                        this.temperature = Math.round(this.temperature) + 1;
+                        this.temperature = Math.round(this.temperature) + temperatureStep;
                     }
                     
-                    // 确保温度在 -100 到 200 之间
+                    // 确保温度在 -100 到 1000 之间
                     if (this.temperature >= 0) {
-                        this.temperature = Math.min(200, this.temperature);
+                        this.temperature = Math.min(1000, this.temperature);
                     } else {
-                        this.temperature = Math.max(-100, this.temperature);
+                        this.temperature = Math.max(-1000, this.temperature);
                     }
                     
                     // 应用温度效果
@@ -5752,7 +5900,7 @@ startAttack() {
                 
                 // 如果僵尸有温度附加，给植物施加温度
                 if (this.temperatureBonus !== undefined && this.temperatureBonus !== 0) {
-                    plant.temperature = Math.max(-100, Math.min(100, plant.temperature + this.temperatureBonus));
+                    plant.temperature = Math.max(-1000, Math.min(1000, plant.temperature + this.temperatureBonus));
                     plant.applyTemperatureEffect();
                 }
                 
@@ -5910,6 +6058,9 @@ startAttack() {
                 let isIceBreak = false;
                 let isQuench = false;
                 
+                // 记录伤害前的生命值
+                const oldHealth = this.health;
+                
                 // 判断是否触发破冰伤害：攻击者有正温度附加，被攻击者有负温度
                 if (source && source.temperatureBonus > 0 && this.temperature < 0) {
                     finalDamage *= 3;
@@ -5919,6 +6070,12 @@ startAttack() {
                 else if (source && source.temperatureBonus < 0 && this.temperature > 0) {
                     finalDamage *= 2;
                     isQuench = true;
+                }
+                
+                // 负温度伤害机制：每有-10点温度，增加1%受到的伤害
+                if (this.temperature < 0) {
+                    const coldDamageBonus = Math.floor(Math.abs(this.temperature) / 10);
+                    finalDamage *= (1 + coldDamageBonus / 100);
                 }
                 
                 // 应用隐秘减伤
@@ -5943,18 +6100,133 @@ startAttack() {
                     }, 300);
                 }
                 
+                // 洞僵尸特殊机制
+                if (this.type.id === "holeZombie") {
+                    // 直接检测当前生命值是否低于最大生命值的50%
+                    if (this.health < this.maxHealth * 0.5 && !this.isHoleZombieTransformed && !this.isHoleZombieOnCooldown) {
+                        this.isHoleZombieTransformed = true;
+                        // 切换图片为 hole2
+                        const iconContainer = this.iconContainer;
+                        if (iconContainer) {
+                            iconContainer.innerHTML = "<img src='tupian/hole2.png' style='width: 160%; height: 160%; object-fit: contain;'>";
+                        }
+                        
+                        // 10秒后返回原状态
+                        if (this.holeZombieRevertTimer) {
+                            clearTimeout(this.holeZombieRevertTimer);
+                        }
+                        this.holeZombieRevertTimer = setTimeout(() => {
+                            this.revertHoleZombie();
+                        }, 10000);
+                        
+                        // 启动温度附加回血计时器（每2秒一次）
+                        if (this.holeZombieTemperatureHealTimer) {
+                            clearInterval(this.holeZombieTemperatureHealTimer);
+                        }
+                        this.holeZombieTemperatureHealTimer = setInterval(() => {
+                            this.holeZombieTemperatureHeal();
+                        }, 2000);
+                    }
+                    
+                    // 如果已经变形，且生命值确实降低了，回复1%已损失生命值
+                    if (this.isHoleZombieTransformed && this.health < oldHealth) {
+                        const lostHealth = this.maxHealth - this.health;
+                        const healAmount = Math.floor(lostHealth * 0.01);
+                        if (healAmount > 0) {
+                            this.health = Math.min(this.maxHealth, this.health + healAmount);
+                            this.showDamage(healAmount, true);
+                            this.updateHealthBar();
+                        }
+                    }
+                }
+                
                 if (this.health <= 0) {
                     this.die(source);
                 }
             }
 
+            // 洞僵尸温度附加回血（每2秒执行一次）
+            holeZombieTemperatureHeal() {
+                if (this.type.id !== "holeZombie" || !this.isHoleZombieTransformed) {
+                    return;
+                }
+                
+                // 根据温度附加回复生命值并归零
+                if (this.temperature !== 0) {
+                    const healAmount = Math.abs(this.temperature);
+                    if (healAmount > 0) {
+                        this.health = Math.min(this.maxHealth, this.health + healAmount);
+                        this.showDamage(healAmount, true);
+                        this.updateHealthBar();
+                    }
+                    this.temperature = 0;
+                    this.updateTemperatureDisplay();
+                }
+            }
+
+            // 洞僵尸返回原状态
+            revertHoleZombie() {
+                if (this.type.id !== "holeZombie") {
+                    return;
+                }
+                
+                this.isHoleZombieTransformed = false;
+                
+                // 切换回原始图片
+                const iconContainer = this.iconContainer;
+                if (iconContainer) {
+                    iconContainer.innerHTML = "<img src='tupian/hole.png' style='width: 160%; height: 160%; object-fit: contain;'>";
+                }
+                
+                // 清除温度附加回血计时器
+                if (this.holeZombieTemperatureHealTimer) {
+                    clearInterval(this.holeZombieTemperatureHealTimer);
+                    this.holeZombieTemperatureHealTimer = null;
+                }
+                
+                // 设置冷却状态
+                this.isHoleZombieOnCooldown = true;
+                
+                // 10秒后冷却结束
+                if (this.holeZombieCooldownTimer) {
+                    clearTimeout(this.holeZombieCooldownTimer);
+                }
+                this.holeZombieCooldownTimer = setTimeout(() => {
+                    this.isHoleZombieOnCooldown = false;
+                    this.holeZombieCooldownTimer = null;
+                }, 10000);
+                
+                // 清除返回计时器
+                if (this.holeZombieRevertTimer) {
+                    clearTimeout(this.holeZombieRevertTimer);
+                    this.holeZombieRevertTimer = null;
+                }
+            }
+
             // 死亡
             die(source = null) {
+                // 击杀僵尸获得拉布币币
+                if (window.labubiUpgradeSystem) {
+                    window.labubiUpgradeSystem.addCoins(1);
+                }
+                
                 if (this.moveInterval) {
                     clearInterval(this.moveInterval);
                 }
                 if (this.existTimer) {
                     clearInterval(this.existTimer);
+                }
+                if (this.holeZombieRevertTimer) {
+                    clearTimeout(this.holeZombieRevertTimer);
+                    this.holeZombieRevertTimer = null;
+                }
+                if (this.holeZombieTemperatureHealTimer) {
+                    clearInterval(this.holeZombieTemperatureHealTimer);
+                    this.holeZombieTemperatureHealTimer = null;
+                }
+                if (this.holeZombieCooldownTimer) {
+                    clearTimeout(this.holeZombieCooldownTimer);
+                    this.holeZombieCooldownTimer = null;
                 }
                 
                 // 检查是否需要播放死亡动画（默认播放）
@@ -5981,11 +6253,18 @@ startAttack() {
                             const rowHeight = lawnGridRect.height / window.game.gridRows;
                             const zombieRow = Math.floor((this.y + 7.5 * window.innerHeight / 200 - (lawnGridRect.top - lawnRect.top)) / rowHeight);
                             
+                            // 计算额外的转化数量：每100点最大生命值增加1只
+                            let extraCount = 0;
+                            if (this.type.id === "bigSpider" && this.maxHealth) {
+                                extraCount = Math.floor(this.maxHealth / 100);
+                            }
+                            const totalCount = count + extraCount;
+                            
                             // 用于保存需要继承属性的僵尸（如果有）
                             let inheritedZombie = null;
                             
                             // 生成指定数量的僵尸（全部创建新僵尸）
-                            for (let i = 0; i < count; i++) {
+                            for (let i = 0; i < totalCount; i++) {
                                 // 计算生成位置，添加左右偏移
                                 const spawnOffset = this.type.spawnOffset || 30; // 死亡单位产生偏移值，默认30
                                 const offsetX = (Math.random() - 0.5) * spawnOffset; // 左右偏移
@@ -6200,12 +6479,12 @@ startAttack() {
                 level: 1, // 植物等级，决定卡槽显示顺序
                 canOverlap: false,
                 attackSound: "Sound effects/boxer_attack.mp3", // 攻击音效
-                temperatureAdd:0 
+                temperatureAdd:0
             },
             thrower: {
                 name: "投手",
                 cost: 30,
-                plantCooldown: 10, // 种植冷却10秒
+                plantCooldown: 15, // 种植冷却10秒
                 cardIcon: "<img src='tupian/thrower_idle.png' style='width: 120%; height: 120%; object-fit: contain;'>", // 卡槽显示大小
                 icon: "<img src='tupian/thrower_idle.png' style='width: 120%; height: 120%; object-fit: contain;'>", // 实际种植大小
                 attackIcon: "<img src='tupian/thrower_attack.png' style='width: 120%; height: 120%; object-fit: contain;'>",
@@ -6215,7 +6494,7 @@ startAttack() {
                 bulletOffset: { x: 0, y: -3 * window.innerHeight / 200 },
                 bulletSize: 0.8,
                 bulletDuration: 1200, // 动画持续时间（毫秒）
-                bulletMaxHeight: 10 * window.innerHeight / 150, // 抛物线最高点高度（vmin单位）
+                bulletMaxHeight: 10 * window.innerHeight / 180, // 抛物线最高点高度（vmin单位）
                 health: 50,
                 attack: 20,
                 attackSpeed: 3000,
@@ -6481,23 +6760,23 @@ assassin: {
             big: {
                 name: "大僵尸",
                 icon: "<img src='tupian/zombie_big.png' style='width: 130%; height: 130%; object-fit: contain;'>",
-                health: 300,
+                health: 400,
                 attack: 10,
                 speed: 0.8,
                 temperatureSensitivity: 50, // 温度敏感度（百分比）
                 nextSpawnIntervalModifier: 1,  // 刷新间隔倍率
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
-                  knockbackResistance: 20, // 击退抗性（90%）
+                  knockbackResistance: 50, // 击退抗性
             },
             bigEnhanced: {
                 name: "大僵尸强化",
                 icon: "<img src='tupian/zombie_big_enhanced.png' style='width: 130%; height: 130%; object-fit: contain;'>",
-                health: 300,
+                health: 400,
                 attack: 20,
                 speed: 0.8,
                 temperatureSensitivity: 50, // 温度敏感度（百分比）
                 nextSpawnIntervalModifier: 1,  // 刷新间隔倍率
-                  knockbackResistance: 20, // 击退抗性（90%）
+                  knockbackResistance: 50, // 击退抗性
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
                 
             },
@@ -6534,12 +6813,24 @@ assassin: {
                 attack: 20,
                 attackSpeed: 2000,
                 speed: 0.7,
-                transformOnDeath: { type: "smallSpider", count: 6, inheritIndex: 0 }, // 死亡后转化为4只小蜘蛛，第0个继承属性
+                transformOnDeath: { type: "smallSpider", count: 4, inheritIndex: 0 }, // 死亡后转化为4只小蜘蛛，第0个继承属性
                 spawnOffset: 120, // 死亡单位产生偏移值
                   knockbackResistance: 30, // 击退抗性（90%）
                 temperatureSensitivity: 200, // 温度敏感度（百分比）
                 nextSpawnIntervalModifier: 1,  // 刷新间隔倍率（1.8 = 很慢）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
+            },
+            holeZombie: {
+                id: "holeZombie",
+                name: "洞僵尸",
+                icon: "<img src='tupian/hole.png' style='width: 160%; height: 160%; object-fit: contain;'>",
+                health: 1000,
+                attack: 50,
+                speed: 0.8,
+                temperatureSensitivity: 50, // 温度敏感度（百分比）
+                nextSpawnIntervalModifier: 2,  // 刷新间隔倍率
+                nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
+                knockbackResistance: 80, // 击退抗性（50%）
             },
             shieldZombie: {
                 name: "盾兵僵尸",
@@ -6553,6 +6844,8 @@ assassin: {
                 nextSpawnIntervalModifier: 0.9,  // 刷新间隔倍率（1.1 = 稍慢）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
                 shouldPlayDeathAnimation: false, // 不播放死亡动画和音效
+                temperatureSensitivity: 30, // 温度敏感度（百分比）
+                knockbackResistance: 50, // 击退抗性（50%）
             },
             shieldZombieEnhanced: {
                 name: "盾兵僵尸强化",
@@ -6566,6 +6859,8 @@ assassin: {
                 nextSpawnIntervalModifier: 0.9,  // 刷新间隔倍率（1.4 = 慢）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
                 shouldPlayDeathAnimation: false, // 不播放死亡动画和音效
+                knockbackResistance: 50, // 击退抗性（50%）
+                temperatureSensitivity: 30, // 温度敏感度（百分比）
             },
             strongZombie: {
                 name: "强壮僵尸",
@@ -6587,6 +6882,7 @@ assassin: {
                 drawSound: "Sound effects/zombie_strong_archer_attack.mp3", // 拉弓音效
                 fireSound: "Sound effects/zombie_strong_archer_attack2.mp3", // 发射音效
                 temperatureSensitivity: 50, // 温度敏感度（百分比）
+                knockbackResistance: 50, // 击退抗性
                 nextSpawnIntervalModifier: 2,  // 刷新间隔倍率（2.2 = 超慢！）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
             
@@ -6600,7 +6896,7 @@ assassin: {
                 attackRange: 15 * window.innerHeight / 200, // 攻击判定范围（vmin单位）
                 temperatureSensitivity: 20, // 温度敏感度（百分比）
                 nextSpawnIntervalModifier: 1,  // 刷新间隔倍率（1.6 = 慢）
-                  knockbackResistance: 30, // 击退抗性（90%）
+                  knockbackResistance: 80, // 击退抗性（90%）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
             },
             dog: {
@@ -6624,9 +6920,9 @@ assassin: {
                 health: 2000,
                 attack: 10,
                 speed: 0.6,
-                  knockbackResistance: 50, // 击退抗性（50%）
+                knockbackResistance: 90, // 击退抗性（90%）
                 armor: 20, // 护甲属性：伤害减免值
-                temperatureSensitivity: 100, // 温度敏感度（百分比）
+                temperatureSensitivity: 50, // 温度敏感度（百分比）
                 nextSpawnIntervalModifier: 2.0,  // 刷新间隔倍率（3.0 = 极慢！）
                 nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
             },
@@ -6636,9 +6932,9 @@ assassin: {
     boxWidth: "25vmin",  // 盒子宽度（两倍大小）
     boxHeight: "25vmin", // 盒子高度（两倍大小）
     healthBarOffset: "13vmin", // 血条偏移（两倍大小的调整）
-    knockbackResistance: 90, // 击退抗性（90%）
+    knockbackResistance: 99, // 击退抗性（99%）
     health: 10000,attack: 50,speed: 1,attackSpeed: 500,
-    temperatureSensitivity: 10, // 温度敏感度（百分比）
+    temperatureSensitivity: 1, // 温度敏感度（百分比）
     nextSpawnIntervalModifier: 20,  // 刷新间隔倍率
     nextSpawnIntervalBonus: 0,      // 刷新间隔额外增减（毫秒）
     armor: 50, // 护甲属性：伤害减免值
@@ -8350,7 +8646,14 @@ function spawnSunFromPlant(plant) {
             }
             
             // 计算获得的梦境点数（每关增加上一关的50）
-            const pointsEarned = currentLevelPoints;
+            let pointsEarned = currentLevelPoints;
+            
+            // 添加梦境点数强化加成
+            if (window.labubiUpgradeSystem) {
+                const bonus = window.labubiUpgradeSystem.getBonus();
+                pointsEarned += bonus;
+            }
+            
             currentDreamPoints += pointsEarned;
             
             // 下一关增加50点获得量
@@ -9433,13 +9736,52 @@ function showPlantSelection(card) {
             const growthInfo = document.getElementById('growthInfo');
             const growth = rogueCards.playerGrowthSystem;
             
+            const remainingSlots = Math.max(0, growth.controlPoints - growth.disabledCards.length);
             growthInfo.innerHTML = `
                 <div class="growth-info-row">
-                    <span>🎯 已通关: <strong>${growth.maxCompletedLevel}</strong> 关</span>
-                    <span>⭐ 掌控点数: <strong>${growth.controlPoints}</strong></span>
-                    <span>🚫 禁用卡牌: <strong>${growth.disabledCards.length}</strong> / <strong>${growth.controlPoints}</strong></span>
+                    <span>🚫 已禁用: <strong>${growth.disabledCards.length}</strong> / <strong>${growth.controlPoints}</strong></span>
+                    <span>✅ 还可禁用: <strong>${remainingSlots}</strong></span>
                 </div>
             `;
+        }
+
+        // 重置所有存储数据
+        function resetAllData() {
+            if (!confirm('确定要重置所有数据吗？这将清空所有进度、升级和禁用卡牌！')) {
+                return;
+            }
+            
+            // 清空localStorage
+            localStorage.clear();
+            
+            // 重置playerGrowthSystem
+            if (rogueCards && rogueCards.playerGrowthSystem) {
+                rogueCards.playerGrowthSystem.maxCompletedLevel = 0;
+                rogueCards.playerGrowthSystem.controlPoints = 0;
+                rogueCards.playerGrowthSystem.disabledCards = [];
+                rogueCards.playerGrowthSystem.labubiCoins = 0;
+                rogueCards.playerGrowthSystem.dreamPointsLevel = 0;
+            }
+            
+            // 重置binbinUpgradeSystem
+            if (typeof moneyUpgradeSystem !== 'undefined') {
+                moneyUpgradeSystem.currentLevel = 0;
+            }
+            if (typeof cardLimitSystem !== 'undefined') {
+                cardLimitSystem.currentLevel = 0;
+            }
+            if (typeof plantShopSystem !== 'undefined') {
+                plantShopSystem.unlockedPlants = ['boxer', 'thrower'];
+            }
+            
+            showToast('所有数据已重置！');
+            
+            // 刷新界面
+            renderGrowthInfo();
+            renderCatalogCards();
+            
+            // 关闭弹窗
+            closeCardCatalog();
         }
 
         // 切换卡牌禁用状态
@@ -9507,6 +9849,51 @@ function showPlantSelection(card) {
         // 关闭卡组图鉴
         function closeCardCatalog() {
             document.getElementById('cardCatalogModal').style.display = 'none';
+        }
+        
+        // 打开升级界面
+        function openUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'flex';
+            renderUpgradeInfo();
+        }
+        
+        // 关闭升级界面
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'none';
+        }
+        
+        // 渲染升级界面信息
+        function renderUpgradeInfo() {
+            const coinsCount = document.getElementById('coinsCount');
+            const upgradesContainer = document.getElementById('upgradesContainer');
+            
+            const labubiSystem = window.labubiUpgradeSystem;
+            coinsCount.textContent = labubiSystem.getCoins();
+            
+            const upgradeCost = labubiSystem.getUpgradeCost();
+            const description = labubiSystem.getDescription();
+            
+            upgradesContainer.innerHTML = `
+                <div class="upgrade-option">
+                    <h3>梦境点数强化</h3>
+                    <p class="upgrade-description">${description}</p>
+                    <p class="upgrade-cost">升级费用：${upgradeCost} 拉布币币</p>
+                    <button class="upgrade-button" onclick="upgradeDreamPoints()">升级</button>
+                </div>
+            `;
+        }
+        
+        // 升级梦境点数
+        function upgradeDreamPoints() {
+            const labubiSystem = window.labubiUpgradeSystem;
+            const result = labubiSystem.upgrade();
+            
+            if (result.success) {
+                showToast(result.message);
+                renderUpgradeInfo();
+            } else {
+                showToast(result.message);
+            }
         }
         
         // 刷新卡片
@@ -9680,7 +10067,8 @@ function showPlantSelection(card) {
             'F2': { type: 'dog', name: '狗' },
             'F3': { type: 'assassin', name: '刺客' },
             'F4': { type: 'police', name: '警察' },
-            'F5': { type: 'lizard', name: '蜥蜴' }
+            'F5': { type: 'lizard', name: '蜥蜴' },
+            'F6': { type: 'holeZombie', name: '洞僵尸' }
         };
         
         // 通用快捷召唤僵尸函数
