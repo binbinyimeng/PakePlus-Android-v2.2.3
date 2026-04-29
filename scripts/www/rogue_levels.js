@@ -12,8 +12,8 @@ const intervalConfig = {
         baseWaveInterval: 12000          // 基础波次间隔（毫秒）
     },
     minInterval: 60,                  // 最小间隔（毫秒）
-    levelFactor: 30,                  // 关卡数影响因子（每关减少多少毫秒）
-    timeFactor: 3                     // 时间影响因子（每秒减少多少毫秒）
+    levelFactor: 40,                  // 关卡数影响因子（每关减少多少毫秒）
+    timeFactor: 4                     // 时间影响因子（每秒减少多少毫秒）
 };
 // ========== 动态难度调节系统 ==========
 window.difficultyAdjustmentSystem = {
@@ -213,7 +213,7 @@ const zombieThreatRange = {
     "normal": { min: 0, max: 500 },         
     "normalEnhanced": { min: 0, max: 500 },  
     "big": { min: 200, max: 1000 },            
-    "bigEnhanced": { min: 200, max: null },    
+    "bigEnhanced": { min: 200, max: 5000 },    
     "shieldZombie": { min: 0, max: null },    
     "shieldZombieEnhanced": { min: 0, max: null },
     "archer": { min: 500, max: 200000 },       
@@ -224,7 +224,8 @@ const zombieThreatRange = {
     "thug": { min: 300, max: null },            
     "dog": { min: 1000, max: null },             
     "police": { min: 2000, max: null },        
-    "lizard": { min: 5000, max: null }        
+    "lizard": { min: 5000, max: null },
+    "holeZombie": { min: 3000, max: null }        
 };
 
 
@@ -245,12 +246,13 @@ const zombieWeights = {
     "thug": 8, // 暴徒僵尸
     "dog": 1, // 狗僵尸
     "police": 6, // 警察僵尸
-    "lizard": 1// 妙龙僵尸
+    "lizard": 2, // 妙龙僵尸
+    "holeZombie": 3 // 洞僵尸
 };
 
 const zombiePool = [
     "normal", "normalEnhanced", "big", "bigEnhanced", "shieldZombie", "shieldZombieEnhanced", "assassin",
-    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog", "police", "lizard"
+    "archer", "bigSpider", "strongZombie", "strongArcher", "thug", "dog", "police", "lizard", "holeZombie"
 ];
 
 const rogueLevels = [
