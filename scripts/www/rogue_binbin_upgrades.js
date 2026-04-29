@@ -283,11 +283,83 @@ const plantShopSystem = {
     }
 };
 
+// 拉布币币升级系统
+const labubiUpgradeSystem = {
+    // 获取拉布币币数量
+    getCoins: function() {
+        return window.rogueCards.playerGrowthSystem.labubiCoins || 0;
+    },
+    
+    // 设置拉布币币数量
+    setCoins: function(amount) {
+        window.rogueCards.playerGrowthSystem.labubiCoins = amount;
+        window.rogueCards.playerGrowthSystem.save();
+    },
+    
+    // 获取梦境点数强化等级
+    getLevel: function() {
+        return window.rogueCards.playerGrowthSystem.dreamPointsLevel || 0;
+    },
+    
+    // 设置梦境点数强化等级
+    setLevel: function(level) {
+        window.rogueCards.playerGrowthSystem.dreamPointsLevel = level;
+        window.rogueCards.playerGrowthSystem.save();
+    },
+    
+    // 初始化
+    init: function() {
+        // 数据已经从playerGrowthSystem加载
+    },
+    
+    // 添加拉布币币
+    addCoins: function(amount) {
+        const current = this.getCoins();
+        this.setCoins(current + amount);
+    },
+    
+    // 计算升级费用
+    getUpgradeCost: function() {
+        const level = this.getLevel();
+        // 基础费用100，每级增加100，每5级增加1000
+        let cost = 100 + level * 100 + Math.floor(level / 5) * 1000;
+        return cost;
+    },
+    
+    // 升级
+    upgrade: function() {
+        const cost = this.getUpgradeCost();
+        
+        if (this.getCoins() < cost) {
+            return { success: false, message: "拉布币币不足" };
+        }
+        
+        this.setCoins(this.getCoins() - cost);
+        this.setLevel(this.getLevel() + 1);
+        return { 
+            success: true, 
+            message: `升级到${this.getLevel()}级成功`,
+            cost: cost
+        };
+    },
+    
+    // 获取当前等级加成
+    getBonus: function() {
+        return this.getLevel() * 10;
+    },
+    
+    // 获取描述
+    getDescription: function() {
+        return `当前等级${this.getLevel()}：每关额外获得${this.getBonus()}点梦境点数`;
+    }
+};
+
 // 全局彬彬升级系统
 const binbinUpgradeSystem = {
     moneyUpgrade: moneyUpgradeSystem,
     cardLimit: cardLimitSystem,
     plantShop: plantShopSystem,
+    labubiUpgrade: labubiUpgradeSystem,
     
     // 初始化整个系统
     init: function(plantsData) {
@@ -295,6 +367,7 @@ const binbinUpgradeSystem = {
         this.cardLimit.init();
         this.plantShop.init();
         this.plantShop.initAutoUnlockedPlants(plantsData);
+        this.labubiUpgrade.init();
     },
     
     // 重置系统（进入新肉鸽模式时）
@@ -307,3 +380,4 @@ window.binbinUpgradeSystem = binbinUpgradeSystem;
 window.moneyUpgradeSystem = moneyUpgradeSystem;
 window.cardLimitSystem = cardLimitSystem;
 window.plantShopSystem = plantShopSystem;
+window.labubiUpgradeSystem = labubiUpgradeSystem;
