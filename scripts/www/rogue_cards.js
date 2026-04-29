@@ -71,45 +71,45 @@ effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 200, "攻击伤害提高200%"
                 E(cardEffectTypes.COST_PERCENT, 100, "价格提高100%"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -60, "攻击速度降低60%")], icon: "⚔️" },
     { id: 23, name: "蓄力", description: "攻击伤害提高400%，攻击速度降低150%", rarity: cardRarity.legendary, cost: 30,
-      effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 400, "攻击伤害提高400%"),
+    effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 400, "攻击伤害提高400%"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -150, "攻击速度降低150%")], icon: "💪" },
     // ========== 生命值类 ==========
     { id: 8, name: "余烬", description: "生命值降低20%，攻击速度提高40%，攻击伤害提高40%", rarity: cardRarity.common, cost: 30,effects: [E(cardEffectTypes.HEALTH_PERCENT, -20, "生命值降低20%"),E(cardEffectTypes.ATTACK_SPEED_PERCENT, 40, "攻击速度提高40%"),E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 40, "攻击伤害提高40%")], icon: "✨" },
     { id: 16, name: "生命", description: "生命值提高80%", rarity: cardRarity.common, cost: 20,
-      effects: [E(cardEffectTypes.HEALTH_PERCENT, 80, "生命值提高80%")], icon: "💗" },
+    effects: [E(cardEffectTypes.HEALTH_PERCENT, 80, "生命值提高80%")], icon: "💗" },
     { id: 17, name: "生命回复", description: "每秒回复5点生命值", rarity: cardRarity.common, cost: 20,
-      effects: [E(cardEffectTypes.HEALTH_REGEN, 5, "每秒回复5点生命值")], icon: "💚" },
+    effects: [E(cardEffectTypes.HEALTH_REGEN, 5, "每秒回复5点生命值")], icon: "💚" },
     { id: 19, name: "活力绽放", description: "生命值提高60%，每秒回复1点生命值", rarity: cardRarity.common, cost: 15,
-      effects: [E(cardEffectTypes.HEALTH_PERCENT, 60, "生命值提高60%"),
+    effects: [E(cardEffectTypes.HEALTH_PERCENT, 60, "生命值提高60%"),
                 E(cardEffectTypes.HEALTH_REGEN, 1, "每秒回复1点生命值")], icon: "🌸" },
     { id: 21, name: "铁壁", description: "生命值提高200%，但攻击伤害降低40%", rarity: cardRarity.rare, cost: 40,
-      effects: [E(cardEffectTypes.HEALTH_PERCENT, 200, "生命值提高200%"),
+    effects: [E(cardEffectTypes.HEALTH_PERCENT, 200, "生命值提高200%"),
                 E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, -40, "攻击伤害降低40%")], icon: "🛡️" },
 
     // ========== 传说类 ==========
     { id: 22, name: "蔡鑫源的计算", description: "攻击速度提高100%，植物价格降低50%，攻击伤害降低100%", rarity: cardRarity.legendary, cost: 50,
-      effects: [E(cardEffectTypes.ATTACK_SPEED_PERCENT, 100, "攻击速度提高100%"),
+    effects: [E(cardEffectTypes.ATTACK_SPEED_PERCENT, 100, "攻击速度提高100%"),
                 E(cardEffectTypes.COST_PERCENT, -50, "价格降低50%"),
                 E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, -100, "攻击伤害降低100%")], icon: "🤠" },
 
     { id: 24, name: "燃心", description: "每秒损失15点生命值，攻击速度提高700%", rarity: cardRarity.legendary, cost: 60,
-      effects: [E(cardEffectTypes.ATTACK_SPEED_PERCENT, 700, "攻击速度提高700%"),E(cardEffectTypes.HEALTH_REGEN, -15, "每秒损失15点生命值")], icon: "❤️‍🔥" },
+    effects: [E(cardEffectTypes.ATTACK_SPEED_PERCENT, 700, "攻击速度提高700%"),E(cardEffectTypes.HEALTH_REGEN, -15, "每秒损失15点生命值")], icon: "❤️‍🔥" },
 
 
     { id: 26, name: "全方位打击", description: "X轴和Y轴攻击范围各增加1格", rarity: cardRarity.legendary, cost: 150,
-      effects: [E(cardEffectTypes.X_RANGE_VALUE, 1, "X轴攻击范围增加1格"),
+    effects: [E(cardEffectTypes.X_RANGE_VALUE, 1, "X轴攻击范围增加1格"),
                 E(cardEffectTypes.Y_RANGE_VALUE, 1, "Y轴攻击范围增加1格")], icon: "➕" },
 
     { id: 27, name: "远程专精", description: "X轴攻击范围增加3格，但攻击速度降低40%", rarity: cardRarity.epic, cost: 120,
-      effects: [E(cardEffectTypes.X_RANGE_VALUE, 3, "X轴攻击范围增加3格"),
+    effects: [E(cardEffectTypes.X_RANGE_VALUE, 3, "X轴攻击范围增加3格"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -40, "攻击速度降低40%")], icon: "🎯" },
 
     { id: 28, name: "狂战士契约", description: "生命值降低20%，攻击伤害提高150%，但攻击速度提高50%，X轴攻击范围减少1格", rarity: cardRarity.legendary, cost: 70,
-      effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 150, "攻击伤害提高150%"),
+    effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 150, "攻击伤害提高150%"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, 50, "攻击速度提高50%"),
                 E(cardEffectTypes.HEALTH_PERCENT, -20, "生命值降低20%")], icon: "🗡️" },
     { id: 29, name: "不死诅咒", description: "生命值降低80%，每秒回复10点生命值，攻击伤害提高150%", rarity: cardRarity.legendary, cost: 50,
-      effects: [E(cardEffectTypes.HEALTH_PERCENT, -80, "生命值降低80%"),
+    effects: [E(cardEffectTypes.HEALTH_PERCENT, -80, "生命值降低80%"),
                 E(cardEffectTypes.HEALTH_REGEN, 10, "每秒回复10点生命值"),
                 E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 150, "攻击伤害提高150%")], icon: "💝" },
     { id: 30, name: "玻璃大炮", description: "生命值降低999%，攻击伤害提高500%，攻击范围X轴增加2格", rarity: cardRarity.mythical, cost: 100,effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 500, "攻击伤害提高500%"),E(cardEffectTypes.HEALTH_PERCENT, -999, "生命值降低999%"),E(cardEffectTypes.X_RANGE_VALUE, 2, "X轴攻击范围增加2格")], icon: "🔫" },
@@ -117,69 +117,67 @@ effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 200, "攻击伤害提高200%"
     // ========== 其他类（经济、追击、范围、温度、混合等） ==========
     // common
     { id: 36, name: "小雨", description: "多重数量增加1，Y轴攻击范围增加1格", rarity: cardRarity.epic, cost: 60,
-      effects: [E(cardEffectTypes.LOCK_COUNT, 1, "多重数量增加1"),
+    effects: [E(cardEffectTypes.LOCK_COUNT, 1, "多重数量增加1"),
                 E(cardEffectTypes.Y_RANGE_VALUE, 1, "Y轴攻击范围增加1格")], icon: "🌧️" }, 
     { id: 37, name: "大雨", description: "多重数量增加2，植物价格提高40%", rarity: cardRarity.legendary, cost: 80,
-      effects: [E(cardEffectTypes.LOCK_COUNT, 2, "多重数量增加2"),
+    effects: [E(cardEffectTypes.LOCK_COUNT, 2, "多重数量增加2"),
                 E(cardEffectTypes.COST_PERCENT, 40, "价格提高40%")], icon: "🌧️" },
     // rare
     { id: 39, name: "极寒领域", description: "冰霜附加增加15点，攻击速度降低30%", rarity: cardRarity.rare, cost: 30,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -15, "冰霜附加增加15点"),
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -15, "冰霜附加增加15点"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -30, "攻击速度降低30%")], icon: "🌨️" },
     // epic
     { id: 40, name: "调整", description: "价格降低70%，生命值降低20%", rarity: cardRarity.rare, cost: 30,
-      effects: [E(cardEffectTypes.COST_PERCENT, -70, "价格降低70%"),
+    effects: [E(cardEffectTypes.COST_PERCENT, -70, "价格降低70%"),
                 E(cardEffectTypes.HEALTH_PERCENT, -20, "生命值降低20%")], icon: "💰" },
     { id: 41, name: "优化", description: "价格降低50%", rarity: cardRarity.rare, cost: 20,
-      effects: [E(cardEffectTypes.COST_PERCENT, -50, "价格降低50%")], icon: "💰" },
+    effects: [E(cardEffectTypes.COST_PERCENT, -50, "价格降低50%")], icon: "💰" },
     { id: 42, name: "诅咒", description: "每秒损失3点生命值，攻击力提高80%，攻击速度提高80%", rarity: cardRarity.epic, cost: 50,
-      effects: [E(cardEffectTypes.HEALTH_REGEN, -3, "每秒损失3点生命值"),
+    effects: [E(cardEffectTypes.HEALTH_REGEN, -3, "每秒损失3点生命值"),
                 E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 80, "攻击伤害提高80%"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, 80, "攻击速度提高80%")], icon: "💀" },
     { id: 43, name: "平衡", description: "攻击速度、攻击伤害、生命值提升50%", rarity: cardRarity.epic, cost: 40,effects: [E(cardEffectTypes.HEALTH_PERCENT, 50, "生命值提高50%"),E(cardEffectTypes.ATTACK_SPEED_PERCENT, 50, "攻击速度提高50%"),E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 50, "攻击伤害提高50%"),], icon: "⭐" },
     { id: 1032, name: "猎弓", description: "植物价格提高20%，X轴攻击范围增加1格", rarity: cardRarity.common, cost: 20,
-  effects: [E(cardEffectTypes.X_RANGE_VALUE, 1, "X轴攻击范围增加1格"),
+    effects: [E(cardEffectTypes.X_RANGE_VALUE, 1, "X轴攻击范围增加1格"),
             E(cardEffectTypes.COST_PERCENT, 20, "价格提高20%")], icon: "🏹" },
 
     // ========== 温度卡牌 ==========
     { id: 37, name: "火焰附加", description: "火焰附加增加2点", rarity: cardRarity.common, cost: 20,effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 2, "火焰附加增加2点")], icon: "🔥" },
     { id: 38, name: "冰霜附加", description: "冰霜附加增加3点", rarity: cardRarity.common, cost: 20,effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -3, "冰霜附加增加3点")], icon: "❄️" },
 
-    { id: 63, name: "极热爆发", description: "火焰附加增加8点，攻击速度降低40%", rarity: cardRarity.rare, cost: 50,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 8, "火焰附加增加8点"),
-                E(cardEffectTypes.ATTACK_SPEED_PERCENT, -40, "攻击速度降低40%")], icon: "🌡️" },
+    { id: 63, name: "极热爆发", description: "火焰附加增加5点，攻击速度降低50%", rarity: cardRarity.rare, cost: 70,
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 5, "火焰附加增加5点"),
+                E(cardEffectTypes.ATTACK_SPEED_PERCENT, -50, "攻击速度降低50%")], icon: "🌡️" },
     { id: 64, name: "寒冰护体", description: "冰霜附加增加10点，生命值提高40%", rarity: cardRarity.epic, cost: 80,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -10, "冰霜附加增加10点"),
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -10, "冰霜附加增加10点"),
                 E(cardEffectTypes.HEALTH_PERCENT, 40, "生命值提高40%")], icon: "❄️" },
-    { id: 65, name: "炽热呼吸", description: "火焰附加增加3点，追击触发概率提高20%", rarity: cardRarity.rare, cost: 60,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 3, "火焰附加增加3点"),
+    { id: 65, name: "炽热呼吸", description: "火焰附加增加3点，追击触发概率提高20%", rarity: cardRarity.rare, cost: 80,
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 3, "火焰附加增加3点"),
                 E(cardEffectTypes.CHASE_TRIGGER_CHANCE, 20, "追击触发概率提高20%")], icon: "🎵" },
     { id: 68, name: "绝对零度", description: "冰霜附加增加100点，但攻击速度降低100%", rarity: cardRarity.mythical, cost: 80,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -100, "冰霜附加增加100点"),
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, -100, "冰霜附加增加100点"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -100, "攻击速度降低100%")], icon: "❄️" },
-    { id: 69, name: "浴火", description: "火焰附加增加4点，生命回复每秒+2", rarity: cardRarity.epic, cost: 60,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 5, "火焰附加增加5点"), 
-                  E(cardEffectTypes.HEALTH_REGEN, 2, "生命回复每秒+2")], icon: "🔄" },
-    { id: 47, name: "熔岩", description: "火焰附加增加3点，生命值提高60%", rarity: cardRarity.epic, cost: 50,
-      effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 3, "火焰附加增加3点"),
-                E(cardEffectTypes.HEALTH_PERCENT, 60, "生命值提高60%")], icon: "🌋" },
+    { id: 69, name: "浴火", description: "火焰附加增加4点，生命回复每秒+2", rarity: cardRarity.epic, cost: 80,
+    effects: [E(cardEffectTypes.TEMPERATURE_BONUS, 4, "火焰附加增加4点"), 
+            E(cardEffectTypes.HEALTH_REGEN, 2, "生命回复每秒+2")], icon: "🌋" },
+
 
     // ========== 追击卡牌 ==========
     { id: 33, name: "追击", description: "最大追击次数增加3次,追击触发概率提高10%", rarity: cardRarity.common, cost: 10,
-      effects: [E(cardEffectTypes.MAX_CHASES, 3, "最大追击次数增加3次"),
+    effects: [E(cardEffectTypes.MAX_CHASES, 3, "最大追击次数增加3次"),
                 E(cardEffectTypes.CHASE_TRIGGER_CHANCE, 10, "追击触发概率提高10%")], icon: "🥜" },
     { id: 53, name: "连锁追击", description: "最大追击次数增加2次，追击触发概率提高30%", rarity: cardRarity.rare, cost: 30,
-      effects: [E(cardEffectTypes.MAX_CHASES, 2, "最大追击次数增加2次"),
+    effects: [E(cardEffectTypes.MAX_CHASES, 2, "最大追击次数增加2次"),
                 E(cardEffectTypes.CHASE_TRIGGER_CHANCE, 30, "追击触发概率提高30%")], icon: "🔗" },
     { id: 54, name: "致命追击", description: "追击伤害倍率提高50%，攻击速度降低30%", rarity: cardRarity.epic, cost: 40,
-      effects: [E(cardEffectTypes.CHASE_DAMAGE_RATIO, 50, "追击伤害倍率提高50%"),
+    effects: [E(cardEffectTypes.CHASE_DAMAGE_RATIO, 50, "追击伤害倍率提高50%"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, -30, "攻击速度降低30%")], icon: "🧷" }, 
     { id: 56, name: "追击大师", description: "最大追击次数增加2次，追击触发概率提高30%，追击伤害倍率提高30%", rarity: cardRarity.legendary, cost: 100,
       effects: [E(cardEffectTypes.MAX_CHASES, 2, "最大追击次数增加2次"),
                 E(cardEffectTypes.CHASE_TRIGGER_CHANCE, 30, "追击触发概率提高30%"),
                 E(cardEffectTypes.CHASE_DAMAGE_RATIO, 30, "追击伤害倍率提高30%")], icon: "🕶️" },
     { id: 57, name: "追追追追追击", description: "最大追击次数增加10次", rarity: cardRarity.mythical, cost: 80,
-      effects: [E(cardEffectTypes.MAX_CHASES, 10, "最大追击次数增加10次")], icon: "🖇️" },
+    effects: [E(cardEffectTypes.MAX_CHASES, 10, "最大追击次数增加10次")], icon: "🖇️" },
     { id: 1080, name: "星辰炮", description: "植物价格提高150%，X轴攻击范围增加3格，追击伤害倍率提高300%，攻击速度降低50%", rarity: cardRarity.mythical, cost: 100,
   effects: [E(cardEffectTypes.CHASE_DAMAGE_RATIO, 300, "追击伤害倍率提高300%"),
             E(cardEffectTypes.COST_PERCENT, 150, "价格提高150%"),
@@ -188,14 +186,14 @@ effects: [E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 200, "攻击伤害提高200%"
     
     // ========== 击退卡牌 ========== 
     { id: 204, name: "疾风之剑", description: "击退力数值增加20，攻击速度提高70%", rarity: cardRarity.epic, cost: 70,
-      effects: [E(cardEffectTypes.KNOCKBACK_FORCE_VALUE, 20, "击退力数值增加20"),
+    effects: [E(cardEffectTypes.KNOCKBACK_FORCE_VALUE, 20, "击退力数值增加20"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, 70, "攻击速度提高70%")], icon: "🗡️" },
     { id: 206, name: "飓风之弓", description: "X轴攻击范围增加2格，击退力数值减少10，攻击速度提高70%", rarity: cardRarity.epic, cost: 70,
-      effects: [E(cardEffectTypes.X_RANGE_VALUE, 2, "X轴攻击范围增加2格"),
+    effects: [E(cardEffectTypes.X_RANGE_VALUE, 2, "X轴攻击范围增加2格"),
                 E(cardEffectTypes.KNOCKBACK_FORCE_VALUE, -10, "击退力数值减少10"),
                 E(cardEffectTypes.ATTACK_SPEED_PERCENT, 70, "攻击速度提高70%")], icon: "🏹" },
-    { id: 208, name: "龙息", description: "击退力数值增加30，攻击伤害提高50%，火焰附加增加10点", rarity: cardRarity.legendary, cost: 120,
-      effects: [E(cardEffectTypes.KNOCKBACK_FORCE_VALUE, 30, "击退力数值增加30"),
+    { id: 208, name: "龙息", description: "击退力数值增加30，攻击伤害提高50%，火焰附加增加10点", rarity: cardRarity.legendary, cost: 150,
+    effects: [E(cardEffectTypes.KNOCKBACK_FORCE_VALUE, 30, "击退力数值增加30"),
                 E(cardEffectTypes.ATTACK_DAMAGE_PERCENT, 50, "攻击伤害提高50%"),
                 E(cardEffectTypes.TEMPERATURE_BONUS, 10, "火焰附加增加10点")], icon: "🐉" },
 ];
@@ -349,6 +347,8 @@ const playerGrowthSystem = {
     maxCompletedLevel: 0,  // 已通关最大关卡数
     controlPoints: 0,      // 掌控点数
     disabledCards: [],     // 禁用卡牌ID列表
+    labubiCoins: 0,        // 拉布币币
+    dreamPointsLevel: 0,   // 梦境点数强化等级
     
     // 初始化（从localStorage加载）
     init: function() {
@@ -359,6 +359,8 @@ const playerGrowthSystem = {
                 this.maxCompletedLevel = data.maxCompletedLevel || 0;
                 this.controlPoints = data.controlPoints || 0;
                 this.disabledCards = data.disabledCards || [];
+                this.labubiCoins = data.labubiCoins || 0;
+                this.dreamPointsLevel = data.dreamPointsLevel || 0;
             }
         } catch (e) {
             console.log('加载成长数据失败:', e);
@@ -371,7 +373,9 @@ const playerGrowthSystem = {
             localStorage.setItem('playerGrowthData', JSON.stringify({
                 maxCompletedLevel: this.maxCompletedLevel,
                 controlPoints: this.controlPoints,
-                disabledCards: this.disabledCards
+                disabledCards: this.disabledCards,
+                labubiCoins: this.labubiCoins,
+                dreamPointsLevel: this.dreamPointsLevel
             }));
         } catch (e) {
             console.log('保存成长数据失败:', e);
